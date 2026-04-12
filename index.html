@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DHL Supply Chain — CTC Portal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #fff8e1 0%, #fff3cd 40%, #ffe0b2 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      padding: 40px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative circles */
+    .circle {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .c1 { width: 420px; height: 420px; background: rgba(255,204,0,0.25); top: -120px; left: -120px; }
+    .c2 { width: 320px; height: 320px; background: rgba(212,5,17,0.08); bottom: -80px; right: -80px; }
+    .c3 { width: 200px; height: 200px; background: rgba(255,160,0,0.15); top: 60%; left: 10%; }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 48px; }
+
+    .dhl-badge {
+      display: inline-block;
+      background: #D40511;
+      color: white;
+      font-size: 46px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      padding: 8px 28px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-family: 'Arial Black', Arial, sans-serif;
+      box-shadow: 0 6px 24px rgba(212,5,17,0.3);
+    }
+
+    .header h1 {
+      color: #1a1a1a;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .header-subtitle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(212,5,17,0.08);
+      border: 1px solid rgba(212,5,17,0.18);
+      border-radius: 99px;
+      padding: 5px 16px;
+    }
+
+    .header-subtitle span {
+      font-size: 12px;
+      color: #D40511;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: #D40511; display: inline-block; animation: pulse 1.5s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    /* Cards */
+    .cards {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .card {
+      width: 270px;
+      border-radius: 24px;
+      padding: 36px 28px 30px;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover { transform: translateY(-8px); }
+
+    /* Card 1 — Warehouse */
+    .card-warehouse {
+      background: linear-gradient(145deg, #e3f2fd, #bbdefb);
+      box-shadow: 0 8px 32px rgba(30,136,229,0.2);
+      border: 1.5px solid rgba(30,136,229,0.15);
+    }
+    .card-warehouse:hover { box-shadow: 0 20px 48px rgba(30,136,229,0.3); }
+    .card-warehouse .accent  { color: #1565c0; }
+    .card-warehouse .divider { background: linear-gradient(90deg, #1e88e5, #42a5f5); }
+    .card-warehouse .btn     { background: linear-gradient(135deg, #1565c0, #1e88e5); box-shadow: 0 4px 16px rgba(30,136,229,0.35); }
+    .card-warehouse .tag     { background: rgba(30,136,229,0.12); color: #1565c0; border: 1px solid rgba(30,136,229,0.2); }
+
+    /* Card 2 — Shipping Co. */
+    .card-shipping {
+      background: linear-gradient(145deg, #fff8e1, #ffecb3);
+      box-shadow: 0 8px 32px rgba(255,160,0,0.2);
+      border: 1.5px solid rgba(255,160,0,0.2);
+    }
+    .card-shipping:hover { box-shadow: 0 20px 48px rgba(255,160,0,0.35); }
+    .card-shipping .accent  { color: #e65100; }
+    .card-shipping .divider { background: linear-gradient(90deg, #ff8f00, #FFCC00); }
+    .card-shipping .btn     { background: linear-gradient(135deg, #e65100, #ff6d00); box-shadow: 0 4px 16px rgba(230,81,0,0.35); }
+    .card-shipping .tag     { background: rgba(255,160,0,0.15); color: #bf360c; border: 1px solid rgba(255,160,0,0.25); }
+
+    .card .icon {
+      font-size: 54px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .card .accent {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .card h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .divider {
+      width: 40px;
+      height: 3px;
+      border-radius: 99px;
+      margin: 12px auto 14px;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.7;
+      margin-bottom: 6px;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      border-radius: 99px;
+      margin: 4px 2px 16px;
+      text-transform: uppercase;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 6px;
+      color: white;
+      border-radius: 10px;
+      padding: 11px 30px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .card:hover .btn { opacity: 0.92; transform: scale(1.04); }
+
+    /* Footer */
+    .footer {
+      margin-top: 48px;
+      color: #999;
+      font-size: 12px;
+      text-align: center;
+      letter-spacing: 0.5px;
+      position: relative;
+      z-index: 1;
+    }
+    .footer span { color: #D40511; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <div class="circle c1"></div>
+  <div class="circle c2"></div>
+  <div class="circle c3"></div>
+
+  <div class="content">
+
+    <div class="header">
+      <div class="dhl-badge">DHL</div>
+      <h1>DSC · CTC FG Export</h1>
+      <div class="header-subtitle">
+        <span class="dot"></span>
+        <span>เลือกระบบที่ต้องการใช้งาน</span>
+      </div>
+    </div>
+
+    <div class="cards">
+
+      <a class="card card-warehouse" href="https://warehouse-scanner-production.up.railway.app" target="_blank">
+        <span class="icon">📦</span>
+        <span class="accent">Warehouse System</span>
+        <h2>Warehouse</h2>
+        <div class="divider"></div>
+        <p>สแกนสินค้าเข้า-ออก<br>ติดตาม Session คลังสินค้า</p>
+        <div>
+          <span class="tag">Scanner</span>
+          <span class="tag">Session</span>
+        </div>
+        <span class="btn">เข้าสู่ระบบ →</span>
+      </a>
+
+      <a class="card card-shipping" href="https://dhl-booking-cloud-production.up.railway.app" target="_blank">
+        <span class="icon">🚢</span>
+        <span class="accent">Booking System</span>
+        <h2>Shipping Co.</h2>
+        <div class="divider"></div>
+        <p>อ่าน Booking PDF จัดการ<br>ค่าใช้จ่ายและออก SI</p>
+        <div>
+          <span class="tag">Booking</span>
+          <span class="tag">Local Charges</span>
+        </div>
+        <span class="btn">เข้าสู่ระบบ →</span>
+      </a>
+
+    </div>
+
+    <div class="footer">
+      © DHL Supply Chain (Thailand) &nbsp;·&nbsp; Powered by <span>CTC Site</span>
+    </div>
+
+  </div>
+
+</body>
+</html>
