@@ -20,7 +20,6 @@
       overflow-x: hidden;
     }
 
-    /* Decorative circles */
     .circle {
       position: fixed;
       border-radius: 50%;
@@ -40,7 +39,6 @@
       align-items: center;
     }
 
-    /* Header */
     .header { text-align: center; margin-bottom: 48px; }
 
     .dhl-badge {
@@ -90,7 +88,6 @@
       50%       { opacity: 0.5; transform: scale(0.7); }
     }
 
-    /* Cards */
     .cards {
       display: flex;
       gap: 32px;
@@ -113,7 +110,6 @@
 
     .card:hover { transform: translateY(-8px); }
 
-    /* Card 1 — Warehouse */
     .card-warehouse {
       background: linear-gradient(145deg, #e3f2fd, #bbdefb);
       box-shadow: 0 8px 32px rgba(30,136,229,0.2);
@@ -125,7 +121,6 @@
     .card-warehouse .btn     { background: linear-gradient(135deg, #1565c0, #1e88e5); box-shadow: 0 4px 16px rgba(30,136,229,0.35); }
     .card-warehouse .tag     { background: rgba(30,136,229,0.12); color: #1565c0; border: 1px solid rgba(30,136,229,0.2); }
 
-    /* Card 2 — Shipping Co. */
     .card-shipping {
       background: linear-gradient(145deg, #fff8e1, #ffecb3);
       box-shadow: 0 8px 32px rgba(255,160,0,0.2);
@@ -136,6 +131,17 @@
     .card-shipping .divider { background: linear-gradient(90deg, #ff8f00, #FFCC00); }
     .card-shipping .btn     { background: linear-gradient(135deg, #e65100, #ff6d00); box-shadow: 0 4px 16px rgba(230,81,0,0.35); }
     .card-shipping .tag     { background: rgba(255,160,0,0.15); color: #bf360c; border: 1px solid rgba(255,160,0,0.25); }
+
+    .card-transport {
+      background: linear-gradient(145deg, #fff1f2, #fecdd3);
+      box-shadow: 0 8px 32px rgba(212,5,17,0.2);
+      border: 1.5px solid rgba(212,5,17,0.15);
+    }
+    .card-transport:hover { box-shadow: 0 20px 48px rgba(212,5,17,0.3); }
+    .card-transport .accent  { color: #D40511; }
+    .card-transport .divider { background: linear-gradient(90deg, #D40511, #ff6b6b); }
+    .card-transport .btn     { background: linear-gradient(135deg, #b30000, #D40511); box-shadow: 0 4px 16px rgba(212,5,17,0.35); }
+    .card-transport .tag     { background: rgba(212,5,17,0.10); color: #b30000; border: 1px solid rgba(212,5,17,0.2); }
 
     .card .icon {
       font-size: 54px;
@@ -197,7 +203,6 @@
     }
     .card:hover .btn { opacity: 0.92; transform: scale(1.04); }
 
-    /* Footer */
     .footer {
       margin-top: 48px;
       color: #999;
@@ -260,6 +265,19 @@
         <div>
           <span class="tag">Booking</span>
           <span class="tag">Local Charges</span>
+        </div>
+        <span class="btn">เข้าสู่ระบบ →</span>
+      </a>
+
+      <a class="card card-transport" href="https://transport-dashboard-production-a202.up.railway.app" target="_blank">
+        <span class="icon">🚛</span>
+        <span class="accent">Transport System</span>
+        <h2>Transport</h2>
+        <div class="divider"></div>
+        <p>ติดตาม Export FCL Shipment<br>Loading Activity & Receiving</p>
+        <div>
+          <span class="tag">Tracking</span>
+          <span class="tag">FCL Export</span>
         </div>
         <span class="btn">เข้าสู่ระบบ →</span>
       </a>
