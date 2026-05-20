@@ -41,28 +41,13 @@
 
     .header { text-align: center; margin-bottom: 48px; }
 
-    .dhl-badge {
-      display: inline-block;
-      background: #D40511;
-      color: white;
-      font-size: 42px;
-      font-weight: 900;
-      letter-spacing: 0px;
-      padding: 12px 40px;
-      border-radius: 16px;
-      margin-bottom: 16px;
-      font-family: 'Arial Black', Arial, sans-serif;
-      box-shadow: 0 6px 24px rgba(212,5,17,0.3);
-      white-space: nowrap;
-    }
-
-    .header h1 {
-      color: #1a1a1a;
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 10px;
+    .hero-mascot {
+      display: block;
+      width: min(360px, 82vw);
+      height: auto;
+      margin: 0 auto 18px;
+      border-radius: 28px;
+      box-shadow: 0 18px 48px rgba(212,5,17,0.14);
     }
 
     .header-subtitle {
@@ -218,8 +203,7 @@
     @media (max-width: 600px) {
       body { padding: 32px 16px; }
       .header { margin-bottom: 32px; }
-      .dhl-badge { font-size: 36px; padding: 6px 20px; }
-      .header h1 { font-size: 18px; }
+      .hero-mascot { width: min(300px, 88vw); border-radius: 22px; }
       .card { width: 100%; max-width: 320px; }
       .footer { margin-top: 32px; }
     }
@@ -305,8 +289,7 @@
   <div class="content" style="margin-top:60px">
 
     <div class="header">
-      <div class="dhl-badge">SMART EXPORT</div>
-      <h1>DSC · CTC FG Export</h1>
+      <img class="hero-mascot" src="/img/smart-export-panda.png" alt="Cute panda holding a Smart Export sign">
       <div class="header-subtitle">
         <span class="dot"></span>
         <span id="header-greeting">เลือกระบบที่ต้องการใช้งาน</span>
