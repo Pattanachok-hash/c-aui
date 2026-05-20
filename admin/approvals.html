@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approvals - DSC Portal Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="/css/portal.css">
+    <style>
+        .admin-tabs {
+            display: inline-flex;
+            gap: .35rem;
+            padding: .25rem;
+            margin-bottom: 1.25rem;
+            background: rgba(255,255,255,.7);
+            border: 1px solid rgba(255,255,255,.8);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+        .tab-btn {
+            min-height: 36px;
+            padding: .45rem .85rem;
+            border: 0;
+            border-radius: 9px;
+            background: transparent;
+            color: var(--gray-600);
+            font: inherit;
+            font-size: .84rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: #fff;
+            color: var(--dhl-red);
+            box-shadow: 0 4px 12px rgba(0,0,0,.08);
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .user-tools {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            margin-bottom: 1rem;
+            padding: .75rem;
+            background: rgba(255,255,255,.55);
+            border: 1px solid rgba(255,255,255,.75);
+            border-radius: 14px;
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .user-search {
+            position: relative;
+            width: 100%;
+            max-width: 460px;
+        }
+        .user-search input {
+            width: 100%;
+            min-height: 40px;
+            padding-left: 2.35rem;
+            padding-right: 2.2rem;
+            background: rgba(255,255,255,.92);
+            border-color: rgba(209,213,219,.9);
+            box-shadow: 0 4px 14px rgba(0,0,0,.04);
+        }
+        .search-icon {
+            position: absolute;
+            left: .85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            pointer-events: none;
+        }
+        .search-clear {
+            position: absolute;
+            right: .45rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            min-height: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--gray-400);
+            cursor: pointer;
+            display: none;
+            font-size: 1rem;
+            line-height: 1;
+        }
+        .search-clear.show {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .search-clear:hover {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .approval-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            background: rgba(255,255,255,.7);
+            border-radius: 14px;
+            margin-bottom: .65rem;
+            border: 1px solid rgba(255,255,255,.8);
+            transition: background .15s, transform .12s;
+            animation: row-in .35s ease-out;
+        }
+        @keyframes row-in {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .approval-row.highlight {
+            background: linear-gradient(135deg, rgba(255,204,0,.25), rgba(255,143,0,.18));
+            border-color: rgba(255,143,0,.4);
+        }
+        .approval-info { flex: 1; min-width: 0; }
+        .approval-email {
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 2px;
+            word-break: break-all;
+        }
+        .approval-time { font-size: .78rem; color: var(--gray-500); }
+        .approval-actions { display: flex; gap: .4rem; flex-shrink: 0; }
+
+        .user-apps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem;
+            margin-top: .45rem;
+        }
+        .user-app-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: .18rem .5rem;
+            border-radius: 999px;
+            background: rgba(59,130,246,.1);
+            color: #1d4ed8;
+            font-size: .72rem;
+            font-weight: 800;
+        }
+        .user-app-pill.admin {
+            background: rgba(212,5,17,.1);
+            color: var(--dhl-red);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--gray-500);
+        }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: .5; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            backdrop-filter: blur(4px);
+            animation: fade-in .2s ease-out;
+        }
+        .modal-overlay.open { display: flex; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .modal {
+            background: #fff;
+            border-radius: 18px;
+            padding: 28px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.3);
+            animation: modal-in .3s cubic-bezier(.34, 1.56, .64, 1);
+        }
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(.9); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        .modal-title { font-size: 1.15rem; font-weight: 800; color: var(--gray-900); margin-bottom: 4px; }
+        .modal-email { color: var(--gray-500); font-size: .85rem; margin-bottom: 16px; word-break: break-all; }
+
+        .app-grant {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .65rem .85rem;
+            background: var(--gray-50);
+            border-radius: 10px;
+            margin-bottom: .5rem;
+            border: 2px solid transparent;
+            transition: border-color .15s, background .15s;
+        }
+        .app-grant.checked {
+            border-color: var(--dhl-red);
+            background: rgba(212,5,17,.04);
+        }
+        .app-grant input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: var(--dhl-red);
+        }
+        .app-grant label {
+            flex: 1;
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin: 0;
+        }
+        .app-grant select {
+            width: auto;
+            padding: .35rem .6rem;
+            font-size: .82rem;
+            font-weight: 600;
+            background: #fff;
+        }
+        .app-grant select:disabled { opacity: .4; }
+
+        @media (max-width: 640px) {
+            .approval-row { align-items: stretch; flex-direction: column; }
+            .approval-actions { flex-wrap: wrap; }
+            .admin-tabs { width: 100%; }
+            .tab-btn { flex: 1; }
+            .user-tools { align-items: stretch; flex-direction: column; }
+            .user-search { max-width: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="topbar"></div>
+
+    <div class="page-wrap">
+        <div class="page-title" style="margin-bottom:1.5rem">
+            <h1>Portal Admin</h1>
+            <small id="count-label">Loading...</small>
+        </div>
+
+        <div class="admin-tabs" role="tablist">
+            <button class="tab-btn active" id="tab-pending" type="button" onclick="showTab('pending')">Pending Approvals</button>
+            <button class="tab-btn" id="tab-users" type="button" onclick="showTab('users')">Approved Users</button>
+        </div>
+
+        <div id="alert-box"></div>
+
+        <div class="tab-panel active" id="panel-pending">
+            <div id="approvals-list">
+                <div class="empty-state"><div class="icon">...</div>Loading pending approvals...</div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-users">
+            <div class="user-tools">
+                <div class="user-search">
+                    <svg class="search-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <path d="m20 20-3.5-3.5"></path>
+                    </svg>
+                    <input type="search" id="user-search" placeholder="Search email, app, or role" autocomplete="off">
+                    <button class="search-clear" id="user-search-clear" type="button" aria-label="Clear search">×</button>
+                </div>
+            </div>
+            <div id="users-list">
+                <div class="empty-state"><div class="icon">...</div>Loading approved users...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-approve">
+        <div class="modal">
+            <div class="modal-title">Approve and assign access</div>
+            <div class="modal-email" id="modal-email">-</div>
+            <div style="font-size:.82rem;color:var(--gray-600);margin-bottom:.5rem">
+                Select apps this user can access and set the stored role.
+            </div>
+            <div class="app-grant" data-app="warehouse">
+                <input type="checkbox" id="grant-warehouse">
+                <label for="grant-warehouse">Warehouse</label>
+                <select id="role-warehouse" disabled>
+                    <option value="operator">Operator</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="app-grant" data-app="transport">
+                <input type="checkbox" id="grant-transport">
+                <label for="grant-transport">Transport</label>
+                <select id="role-transport" disabled>
+                    <option value="operator">Operator</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="app-grant" data-app="shipco">
+                <input type="checkbox" id="grant-shipco">
+                <label for="grant-shipco">Shipping Co.</label>
+                <select id="role-shipco" disabled>
+                    <option value="operator">Operator</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:.5rem;margin-top:1.25rem">
+                <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-approve')">Cancel</button>
+                <button class="btn btn-success" style="flex:1" id="btn-confirm-approve">Approve</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-reject">
+        <div class="modal">
+            <div class="modal-title">Reject signup</div>
+            <div class="modal-email" id="modal-reject-email">-</div>
+            <div class="form-group">
+                <label>Note (optional)</label>
+                <input type="text" id="reject-note" placeholder="Example: Not an authorized user">
+            </div>
+            <div style="display:flex;gap:.5rem;margin-top:1.25rem">
+                <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-reject')">Cancel</button>
+                <button class="btn btn-danger" style="flex:1" id="btn-confirm-reject">Reject</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-edit-access">
+        <div class="modal">
+            <div class="modal-title">Edit user access</div>
+            <div class="modal-email" id="modal-edit-email">-</div>
+            <div style="font-size:.82rem;color:var(--gray-600);margin-bottom:.5rem">
+                This replaces the user's full access set.
+            </div>
+            <div class="app-grant" data-edit-app="warehouse">
+                <input type="checkbox" id="edit-grant-warehouse">
+                <label for="edit-grant-warehouse">Warehouse</label>
+                <select id="edit-role-warehouse" disabled>
+                    <option value="operator">Operator</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="app-grant" data-edit-app="transport">
+                <input type="checkbox" id="edit-grant-transport">
+                <label for="edit-grant-transport">Transport</label>
+                <select id="edit-role-transport" disabled>
+                    <option value="operator">Operator</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="app-grant" data-edit-app="shipco">
+                <input type="checkbox" id="edit-grant-shipco">
+                <label for="edit-grant-shipco">Shipping Co.</label>
+                <select id="edit-role-shipco" disabled>
+                    <option value="operator">Operator</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:.5rem;margin-top:1.25rem">
+                <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-edit-access')">Cancel</button>
+                <button class="btn btn-primary" style="flex:1" id="btn-save-access">Save access</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        requireAuth();
+        document.getElementById('topbar').innerHTML = renderTopbar();
+
+        const APPS = ['warehouse', 'transport', 'shipco'];
+        const APP_LABELS = { warehouse: 'Warehouse', transport: 'Transport', shipco: 'Shipping Co.' };
+
+        let pendingList = [];
+        let usersList = [];
+        let usersLoaded = false;
+        let currentTarget = null;
+        let currentEditUser = null;
+        let userSearchTerm = '';
+
+        function showTab(name) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`tab-${name}`).classList.add('active');
+            document.getElementById(`panel-${name}`).classList.add('active');
+            document.getElementById('count-label').textContent = name === 'pending'
+                ? `${pendingList.length} pending`
+                : `${usersList.length} users`;
+            if (name === 'users' && !usersLoaded) loadUsers();
+        }
+
+        async function loadPending() {
+            try {
+                pendingList = await api.get('/api/admin/pending-approvals');
+                renderPending();
+            } catch (e) {
+                handleAdminLoadError(e, 'approvals-list');
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                usersList = await api.get('/api/admin/users');
+                usersLoaded = true;
+                renderUsers();
+            } catch (e) {
+                handleAdminLoadError(e, 'users-list');
+            }
+        }
+
+        function handleAdminLoadError(e, targetId) {
+            if (e.status === 403) {
+                showAlert('alert-box', 'Admin access required');
+                document.getElementById(targetId).innerHTML = '';
+            } else {
+                showAlert('alert-box', e.message);
+            }
+        }
+
+        function renderPending() {
+            const list = document.getElementById('approvals-list');
+            const highlightEmail = new URLSearchParams(location.search).get('email');
+            if (document.getElementById('panel-pending').classList.contains('active')) {
+                document.getElementById('count-label').textContent = `${pendingList.length} pending`;
+            }
+
+            if (!pendingList.length) {
+                list.innerHTML = `<div class="empty-state"><div class="icon">OK</div>No pending approvals</div>`;
+                return;
+            }
+
+            list.innerHTML = pendingList.map(p => `
+                <div class="approval-row${p.email === highlightEmail ? ' highlight' : ''}">
+                    <div class="approval-info">
+                        <div class="approval-email">${escapeHtml(p.email)}</div>
+                        <div class="approval-time">Requested ${formatDateTime(p.requested_at)}</div>
+                    </div>
+                    <div class="approval-actions">
+                        <button class="btn btn-success btn-sm" onclick="openApprove('${p.id}', '${escapeHtml(p.email)}')">Approve</button>
+                        <button class="btn btn-danger btn-sm" onclick="openReject('${p.id}', '${escapeHtml(p.email)}')">Reject</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderUsers() {
+            const list = document.getElementById('users-list');
+            const filteredUsers = getFilteredUsers();
+            if (document.getElementById('panel-users').classList.contains('active')) {
+                document.getElementById('count-label').textContent = userSearchTerm
+                    ? `${filteredUsers.length} of ${usersList.length} users`
+                    : `${usersList.length} users`;
+            }
+
+            if (!usersList.length) {
+                list.innerHTML = `<div class="empty-state"><div class="icon">-</div>No approved users yet</div>`;
+                return;
+            }
+
+            if (!filteredUsers.length) {
+                list.innerHTML = `<div class="empty-state"><div class="icon">-</div>No users match this search</div>`;
+                return;
+            }
+
+            list.innerHTML = filteredUsers.map(({ user: u, index: idx }) => {
+                const apps = (u.apps || []).map(a => `
+                    <span class="user-app-pill ${a.role === 'admin' ? 'admin' : ''}">
+                        ${escapeHtml(APP_LABELS[a.app] || a.app)}: ${escapeHtml(a.role)}
+                    </span>
+                `).join('') || '<span class="approval-time">No app access</span>';
+
+                return `
+                    <div class="approval-row">
+                        <div class="approval-info">
+                            <div class="approval-email">${escapeHtml(u.email)}</div>
+                            <div class="approval-time">Approved ${formatDateTime(u.decided_at)}</div>
+                            <div class="user-apps">${apps}</div>
+                        </div>
+                        <div class="approval-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="openEditAccess(${idx})">Edit Access</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteApprovedUser(${idx})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getFilteredUsers() {
+            const q = userSearchTerm.trim().toLowerCase();
+            return usersList
+                .map((user, index) => ({ user, index }))
+                .filter(({ user }) => {
+                    if (!q) return true;
+                    const haystack = [
+                        user.email,
+                        user.user_id,
+                        ...(user.apps || []).flatMap(a => [a.app, APP_LABELS[a.app], a.role]),
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    return haystack.includes(q);
+                });
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+        });
+
+        function bindGrantControls(prefix, attrName) {
+            APPS.forEach(app => {
+                const cb = document.getElementById(`${prefix}grant-${app}`);
+                const sel = document.getElementById(`${prefix}role-${app}`);
+                const row = document.querySelector(`.app-grant[${attrName}="${app}"]`);
+                cb.addEventListener('change', () => {
+                    sel.disabled = !cb.checked;
+                    row.classList.toggle('checked', cb.checked);
+                });
+            });
+        }
+
+        bindGrantControls('', 'data-app');
+        bindGrantControls('edit-', 'data-edit-app');
+
+        function resetGrantControls(prefix, attrName, apps = []) {
+            const byApp = new Map(apps.map(a => [a.app, a.role]));
+            APPS.forEach(app => {
+                const role = byApp.get(app);
+                const checked = Boolean(role);
+                const cb = document.getElementById(`${prefix}grant-${app}`);
+                const sel = document.getElementById(`${prefix}role-${app}`);
+                const row = document.querySelector(`.app-grant[${attrName}="${app}"]`);
+                cb.checked = checked;
+                sel.disabled = !checked;
+                sel.value = role || 'operator';
+                row.classList.toggle('checked', checked);
+            });
+        }
+
+        function collectGrantControls(prefix) {
+            return APPS
+                .filter(app => document.getElementById(`${prefix}grant-${app}`).checked)
+                .map(app => ({ app, role: document.getElementById(`${prefix}role-${app}`).value }));
+        }
+
+        function openApprove(id, email) {
+            currentTarget = { id, email };
+            document.getElementById('modal-email').textContent = email;
+            resetGrantControls('', 'data-app');
+            openModal('modal-approve');
+        }
+
+        function openReject(id, email) {
+            currentTarget = { id, email };
+            document.getElementById('modal-reject-email').textContent = email;
+            document.getElementById('reject-note').value = '';
+            openModal('modal-reject');
+        }
+
+        function openEditAccess(index) {
+            const user = usersList[index];
+            if (!user) return;
+            currentEditUser = user;
+            document.getElementById('modal-edit-email').textContent = user.email || '';
+            resetGrantControls('edit-', 'data-edit-app', user.apps || []);
+            openModal('modal-edit-access');
+        }
+
+        document.getElementById('btn-confirm-approve').addEventListener('click', async () => {
+            const apps = collectGrantControls('');
+            if (!apps.length) {
+                toast.warning('Select at least 1 app');
+                return;
+            }
+
+            const btn = document.getElementById('btn-confirm-approve');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Approving...';
+            try {
+                await api.post(`/api/admin/approve-user/${currentTarget.id}`, { apps });
+                toast.success(`Approved ${currentTarget.email}`);
+                closeModal('modal-approve');
+                await loadPending();
+                if (usersLoaded) await loadUsers();
+            } catch (e) {
+                toast.error(e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Approve';
+            }
+        });
+
+        document.getElementById('btn-confirm-reject').addEventListener('click', async () => {
+            const note = document.getElementById('reject-note').value.trim() || null;
+            const btn = document.getElementById('btn-confirm-reject');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Rejecting...';
+            try {
+                await api.post(`/api/admin/reject-user/${currentTarget.id}`, { note });
+                toast.success(`Rejected ${currentTarget.email}`);
+                closeModal('modal-reject');
+                await loadPending();
+            } catch (e) {
+                toast.error(e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Reject';
+            }
+        });
+
+        document.getElementById('btn-save-access').addEventListener('click', async () => {
+            if (!currentEditUser) return;
+            const apps = collectGrantControls('edit-');
+            const btn = document.getElementById('btn-save-access');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Saving...';
+            try {
+                await api.patch(`/api/admin/users/${currentEditUser.user_id}/access`, { apps });
+                toast.success(`Updated ${currentEditUser.email}`);
+                closeModal('modal-edit-access');
+                await loadUsers();
+            } catch (e) {
+                toast.error(e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save access';
+            }
+        });
+
+        async function deleteApprovedUser(index) {
+            const user = usersList[index];
+            if (!user) return;
+            const ok = confirm(`Delete ${user.email} from the portal and Supabase Auth?\n\nThis removes app access and allows this email to sign up again.`);
+            if (!ok) return;
+
+            try {
+                await apiFetch(`/api/admin/users/${user.user_id}`, {
+                    method: 'DELETE',
+                    body: JSON.stringify({ email: user.email || null }),
+                });
+                toast.success(`Deleted ${user.email}`);
+                await loadUsers();
+                await loadPending();
+            } catch (e) {
+                toast.error(e.message);
+            }
+        }
+
+        document.getElementById('user-search').addEventListener('input', e => {
+            userSearchTerm = e.target.value;
+            document.getElementById('user-search-clear').classList.toggle('show', Boolean(userSearchTerm));
+            renderUsers();
+        });
+
+        document.getElementById('user-search-clear').addEventListener('click', () => {
+            const input = document.getElementById('user-search');
+            input.value = '';
+            userSearchTerm = '';
+            document.getElementById('user-search-clear').classList.remove('show');
+            renderUsers();
+            input.focus();
+        });
+
+        loadPending();
+    </script>
+</body>
+</html>

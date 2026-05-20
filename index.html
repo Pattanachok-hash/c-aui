@@ -224,27 +224,100 @@
       .footer { margin-top: 32px; }
     }
   </style>
+  <!-- Auth-aware portal: only shows app cards the signed-in user has access to. -->
+  <style>
+    /* Mini-topbar overlays the gradient hero without disturbing original layout */
+    .portal-topbar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 22px;
+      z-index: 10;
+      background: rgba(255,255,255,.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,.7);
+    }
+    .portal-topbar .who { display: flex; align-items: center; gap: 10px; }
+    .portal-topbar .user-email { font-size: 13px; color: #4b5563; font-weight: 500; }
+    .topbtn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px;
+      background: rgba(255,255,255,.85);
+      border: 1.5px solid rgba(0,0,0,.06);
+      border-radius: 8px;
+      color: #1a1a1a;
+      font-size: 13px; font-weight: 700;
+      text-decoration: none; cursor: pointer;
+      font-family: inherit;
+      transition: background .15s, transform .12s;
+    }
+    .topbtn:hover { background: #fff; transform: translateY(-1px); }
+    .topbtn-admin { background: linear-gradient(135deg,#D40511,#ff3838); color: #fff; border-color: transparent; }
+    .topbtn-admin:hover { box-shadow: 0 6px 18px rgba(212,5,17,.3); }
+
+    /* Hide all cards by default — JS un-hides only the granted ones */
+    .card[data-app] { display: none; }
+    .card[data-app].show { display: block; }
+
+    .portal-loading, .portal-empty {
+      text-align: center; padding: 40px 20px;
+      color: #555; font-size: 15px;
+    }
+    .portal-empty {
+      max-width: 480px; margin: 0 auto;
+      background: rgba(255,255,255,.7);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 32px 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    .portal-empty .big { font-size: 2.2rem; margin-bottom: 8px; }
+    .portal-empty h3 { color: #1a1a1a; font-size: 1.05rem; margin-bottom: 6px; }
+    .portal-empty p  { color: #666; font-size: .88rem; line-height: 1.55; }
+
+    @media (max-width: 600px) {
+      .portal-topbar { padding: 10px 14px; }
+      .portal-topbar .user-email { display: none; }
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Topbar (user email, admin link, password, logout) -->
+  <div class="portal-topbar" id="portal-topbar" style="display:none">
+    <div class="who">
+      <span class="user-email" id="portal-email"></span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <a id="portal-admin-link" class="topbtn topbtn-admin" href="/admin/approvals.html" style="display:none">
+        ⚙ Admin
+      </a>
+      <a class="topbtn" href="/change-password.html">🔒 Password</a>
+      <button class="topbtn" onclick="logout()">Logout</button>
+    </div>
+  </div>
 
   <div class="circle c1"></div>
   <div class="circle c2"></div>
   <div class="circle c3"></div>
 
-  <div class="content">
+  <div class="content" style="margin-top:60px">
 
     <div class="header">
       <div class="dhl-badge">SMART EXPORT</div>
       <h1>DSC · CTC FG Export</h1>
       <div class="header-subtitle">
         <span class="dot"></span>
-        <span>เลือกระบบที่ต้องการใช้งาน</span>
+        <span id="header-greeting">เลือกระบบที่ต้องการใช้งาน</span>
       </div>
     </div>
 
-    <div class="cards">
+    <div id="portal-state" class="portal-loading">⏳ กำลังตรวจสอบสิทธิ์...</div>
 
-      <a class="card card-warehouse" href="https://warehouse.c-aui.com">
+    <div class="cards" id="portal-cards" style="display:none">
+
+      <a class="card card-warehouse" data-app="warehouse" href="https://warehouse.c-aui.com">
         <span class="icon">📦</span>
         <span class="accent">Warehouse System</span>
         <h2>Warehouse</h2>
@@ -257,7 +330,7 @@
         <span class="btn">เข้าสู่ระบบ →</span>
       </a>
 
-      <a class="card card-shipping" href="https://shipco.c-aui.com">
+      <a class="card card-shipping" data-app="shipco" href="https://shipco.c-aui.com">
         <span class="icon">🚢</span>
         <span class="accent">Booking System</span>
         <h2>Shipping Co.</h2>
@@ -270,7 +343,7 @@
         <span class="btn">เข้าสู่ระบบ →</span>
       </a>
 
-      <a class="card card-transport" href="https://transport.c-aui.com">
+      <a class="card card-transport" data-app="transport" href="https://transport.c-aui.com">
         <span class="icon">🚛</span>
         <span class="accent">Transport System</span>
         <h2>Transport</h2>
@@ -286,6 +359,56 @@
     </div>
 
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    (async () => {
+      // Require login
+      const session = await getCurrentSession();
+      if (!session) { window.location.href = '/login.html'; return; }
+
+      // Fetch user info + apps from portal backend
+      let info;
+      try {
+        info = await api.get('/api/auth/me');
+      } catch (e) {
+        // If backend is down or returns 401 → bounce to login
+        await sb.auth.signOut();
+        window.location.href = '/login.html';
+        return;
+      }
+
+      // Topbar
+      document.getElementById('portal-email').textContent = info.email || '';
+      if (info.is_admin_portal) {
+        document.getElementById('portal-admin-link').style.display = '';
+      }
+      document.getElementById('portal-topbar').style.display = '';
+
+      const stateEl = document.getElementById('portal-state');
+      const cardsEl = document.getElementById('portal-cards');
+
+      if (!info.apps || !info.apps.length) {
+        stateEl.outerHTML = `
+          <div class="portal-empty">
+            <div class="big">🔒</div>
+            <h3>ยังไม่ได้รับอนุญาต</h3>
+            <p>บัญชีของคุณยังไม่ได้รับสิทธิ์เข้าใช้งานระบบใดเลย<br>กรุณาติดต่อผู้ดูแล</p>
+          </div>`;
+        return;
+      }
+
+      // Show only granted cards
+      const granted = new Set(info.apps.map(a => a.app));
+      cardsEl.querySelectorAll('.card[data-app]').forEach(card => {
+        if (granted.has(card.dataset.app)) card.classList.add('show');
+      });
+      stateEl.style.display = 'none';
+      cardsEl.style.display = '';
+    })();
+  </script>
 
 </body>
 </html>

@@ -1,0 +1,15 @@
+# Frontend stays on GitHub Pages — don't ship it in the Railway image
+*.html
+css/
+js/
+img/
+*.md
+.git
+.claude/
+.gitignore
+__pycache__/
+*.pyc
+.env
+backend/.env
+.venv/
+venv/

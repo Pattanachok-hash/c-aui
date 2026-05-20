@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign up — DSC Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="/css/portal.css">
+    <style>
+        .signup-card {
+            width: 100%;
+            max-width: 440px;
+            animation: card-rise .5s cubic-bezier(.22,.61,.36,1);
+        }
+        @keyframes card-rise {
+            from { opacity: 0; transform: translateY(20px) scale(.98); }
+            to   { opacity: 1; transform: translateY(0)    scale(1); }
+        }
+        .header-block { text-align: center; margin-bottom: 24px; }
+        .login-link {
+            text-align: center;
+            margin-top: 18px;
+            font-size: .86rem;
+            color: var(--gray-600);
+        }
+        .login-link a { color: var(--dhl-red); font-weight: 700; text-decoration: none; }
+        .login-link a:hover { text-decoration: underline; }
+
+        .success-screen {
+            text-align: center;
+            padding: 12px 0;
+        }
+        .success-icon {
+            width: 64px; height: 64px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FFCC00, #ff8f00);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 30px; font-weight: 900;
+            box-shadow: 0 12px 32px rgba(245,158,11,.35);
+            animation: pop-in .55s cubic-bezier(.34, 1.56, .64, 1);
+        }
+        @keyframes pop-in {
+            0%   { transform: scale(0)    rotate(-30deg); opacity: 0; }
+            60%  { transform: scale(1.15) rotate(8deg);   opacity: 1; }
+            100% { transform: scale(1)    rotate(0); }
+        }
+        .success-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 8px; color: var(--gray-800); }
+        .success-msg   { color: var(--gray-600); font-size: .9rem; line-height: 1.55; }
+    </style>
+</head>
+<body>
+    <div class="center-screen">
+        <div class="signup-card">
+            <div class="header-block">
+                <div class="brand-badge">SMART EXPORT</div>
+                <div class="brand-subtitle">สมัครใช้งานระบบ</div>
+            </div>
+
+            <!-- Signup form -->
+            <div class="card" id="form-card">
+                <div id="alert-box"></div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="you@example.com" autofocus autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="••••••••" autocomplete="new-password">
+                    <div class="pw-rules">
+                        <div class="pw-rules-title">เงื่อนไข Password:</div>
+                        <div class="pw-rule fail" id="rule-length"><span class="icon"></span>ความยาวอย่างน้อย 8 ตัวอักษร</div>
+                        <div class="pw-rule fail" id="rule-number"><span class="icon"></span>มีตัวเลขอย่างน้อย 1 ตัว (0-9)</div>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:1.25rem">
+                    <label>ยืนยัน Password</label>
+                    <input type="password" id="confirm-password" placeholder="••••••••" autocomplete="new-password">
+                </div>
+                <button class="btn btn-primary btn-block" id="btn-signup">สมัครใช้งาน</button>
+
+                <div class="login-link">
+                    มีบัญชีอยู่แล้ว? <a href="/login.html">เข้าสู่ระบบ</a>
+                </div>
+            </div>
+
+            <!-- Success screen -->
+            <div class="card" id="success-card" style="display:none">
+                <div class="success-screen">
+                    <div class="success-icon">⏳</div>
+                    <div class="success-title">สมัครเรียบร้อย</div>
+                    <p class="success-msg">
+                        ขอบคุณที่สมัครใช้งาน<br>
+                        คำขอของคุณจะถูกพิจารณาโดยผู้ดูแล<br>
+                        คุณจะได้รับ email แจ้งเมื่อบัญชีได้รับการอนุมัติ
+                    </p>
+                    <a href="/login.html" class="btn btn-secondary btn-block" style="margin-top:20px">กลับสู่หน้า Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        // Already signed in? Skip
+        (async () => {
+            if (await getCurrentSession()) { window.location.href = '/'; }
+        })();
+
+        const btn = document.getElementById('btn-signup');
+        const emailEl    = document.getElementById('email');
+        const pwEl       = document.getElementById('password');
+        const confirmEl  = document.getElementById('confirm-password');
+
+        const ruleLength = document.getElementById('rule-length');
+        const ruleNumber = document.getElementById('rule-number');
+
+        pwEl.addEventListener('input', () => {
+            const v = pwEl.value;
+            ruleLength.classList.toggle('pass', v.length >= 8);
+            ruleLength.classList.toggle('fail', v.length < 8);
+            const hasDigit = /\d/.test(v);
+            ruleNumber.classList.toggle('pass', hasDigit);
+            ruleNumber.classList.toggle('fail', !hasDigit);
+        });
+
+        async function doSignup() {
+            clearAlert('alert-box');
+            const email   = emailEl.value.trim().toLowerCase();
+            const pw      = pwEl.value;
+            const confirm = confirmEl.value;
+
+            if (!isValidPortalEmail(email)) {
+                showAlert('alert-box', 'กรุณากรอก email ให้ถูกต้อง');
+                return;
+            }
+            if (pw.length < 8) {
+                showAlert('alert-box', 'Password ต้องมีอย่างน้อย 8 ตัวอักษร');
+                return;
+            }
+            if (!/\d/.test(pw)) {
+                showAlert('alert-box', 'Password ต้องมีตัวเลขอย่างน้อย 1 ตัว');
+                return;
+            }
+            if (pw !== confirm) {
+                showAlert('alert-box', 'Password ไม่ตรงกัน');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> กำลังสมัคร...';
+            try {
+                await api.post('/api/auth/signup', { email, password: pw });
+                document.getElementById('form-card').style.display = 'none';
+                document.getElementById('success-card').style.display = '';
+            } catch (e) {
+                showAlert('alert-box', e.message || 'สมัครไม่สำเร็จ');
+                btn.disabled = false;
+                btn.textContent = 'สมัครใช้งาน';
+            }
+        }
+
+        btn.addEventListener('click', doSignup);
+        confirmEl.addEventListener('keydown', e => { if (e.key === 'Enter') doSignup(); });
+    </script>
+</body>
+</html>
