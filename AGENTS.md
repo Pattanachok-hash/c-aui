@@ -118,7 +118,7 @@ c-aui/
 - A scan / approval / signup succeeds even if Resend goes down
 
 ### "Developer" vs "Admin" definition
-- **Portal developer** = email matches `DEVELOPER_EMAIL` config — only this person can approve/reject signups + manage permissions
+- **Portal developer** = email matches `DEVELOPER_EMAIL` config or Supabase Auth `app_metadata.portal_role = 'developer'` — can approve/reject signups + manage permissions
 - **App admin** = `user_app_access.role = 'admin'` for that specific app — used by each app's own backend (warehouse-scanner, etc.)
 
 ## API Endpoints (`api.c-aui.com/api/*`)
@@ -144,6 +144,7 @@ c-aui/
 | POST  | `/admin/reject-user/{id}` | delete auth user + email user |
 | GET   | `/admin/users` | list approved users + their `apps` |
 | PATCH | `/admin/users/{id}/access` | replace user's access set |
+| PATCH | `/admin/users/{id}/portal-role` | promote/demote portal developer access |
 
 ## Environment Variables
 ดูตัวอย่างใน `backend/.env.example`
@@ -178,6 +179,6 @@ Plan: share via cookie on `.c-aui.com` (parent domain) so login at portal → al
 - **Frontend on GitHub Pages**: free + CDN. ถ้าจะใช้ Server-Side Rendering ภายหลัง ต้องเปลี่ยน
 - **No backend for login**: login ทำ client-side ผ่าน Supabase SDK โดยตรง — backend แค่ตรวจ JWT ผ่าน /auth/v1/user
 - **Forgot password custom (not Supabase built-in)**: เลือก custom เพื่อ branded email + consistent UX กับ signup notification
-- **Portal developer = single email**: ตอนนี้แค่ pattanachok_msn — ถ้าอยากให้หลายคน approve ได้ ต้องเปลี่ยน `require_developer` ให้ check portal-level role แทน
+- **Root portal developer**: `DEVELOPER_EMAIL` กันไว้เป็น owner ที่ลบ/demote ไม่ได้; portal developer คนอื่นเก็บที่ Supabase Auth `app_metadata.portal_role`
 
 ## ก่อนแก้ไขอะไรให้ขอ approve จากผู้ใช้ก่อนทุกครั้ง

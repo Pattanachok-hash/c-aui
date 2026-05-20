@@ -316,8 +316,8 @@ c-aui/
 - ถ้า 200 → ได้ user object → return claims dict
 
 ### Developer gate (`require_developer`)
-- Portal developer = email matches `settings.DEVELOPER_EMAIL`
-- ไม่ใช้ user_app_access สำหรับ portal developer (เป็น single email config-driven)
+- Portal developer = email matches `settings.DEVELOPER_EMAIL` or Supabase Auth `app_metadata.portal_role = 'developer'`
+- ไม่ใช้ user_app_access สำหรับ portal developer เพราะ app role ต้องไม่ปนกับ portal-level role
 
 ### Signup
 1. Frontend → POST `/api/auth/signup` พร้อม email + password
@@ -353,6 +353,7 @@ c-aui/
 - POST `/admin/reject-user/{id}` — delete auth user + email user
 - GET `/admin/users` — list approved users + their `apps`
 - PATCH `/admin/users/{id}/access` — replace user's access set
+- PATCH `/admin/users/{id}/portal-role` — promote/demote portal developer access
 
 ## Environment Variables
 
@@ -404,7 +405,7 @@ python -m http.server 5500
 - **Frontend on GitHub Pages**: free CDN. ถ้าจะ SSR ภายหลังต้องเปลี่ยน.
 - **No backend for login**: login = client-side via Supabase SDK. Backend แค่ตรวจ JWT.
 - **Forgot password custom**: เพื่อ branded email matching signup notification.
-- **Portal developer = single email**: hardcoded in config. Multi-developer = refactor `require_developer` to check a portal-level role.
+- **Root portal developer**: `DEVELOPER_EMAIL` is the owner account and cannot be deleted/demoted. Other portal developers are stored in Supabase Auth `app_metadata.portal_role`.
 - **Cross-subdomain SSO ยังไม่ทำ**: ปัจจุบันแต่ละ subdomain มี localStorage แยก → user ต้อง login ต่อ subdomain
   - **Plan A:** cookie storage adapter บน `.c-aui.com` parent domain (ทำให้ SDK เก็บ session ที่ใช้ได้ข้าม subdomain)
   - **Plan B:** URL fragment relay (portal redirect ไปพร้อม `#access_token=...`)

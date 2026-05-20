@@ -51,12 +51,18 @@ def get_current_user(creds: HTTPAuthorizationCredentials = Depends(_bearer)) -> 
         "sub":   user["id"],
         "email": user.get("email"),
         "role":  user.get("role"),
+        "app_metadata": user.get("app_metadata") or {},
     }
+
+
+def is_portal_developer(user: dict) -> bool:
+    email = (user.get("email") or "").lower()
+    metadata = user.get("app_metadata") or {}
+    return email == settings.DEVELOPER_EMAIL.lower() or metadata.get("portal_role") == "developer"
 
 
 def require_developer(user: dict = Depends(get_current_user)) -> dict:
     """Portal developer = configured email. Only this user can manage portal users."""
-    email = (user.get("email") or "").lower()
-    if email != settings.DEVELOPER_EMAIL.lower():
+    if not is_portal_developer(user):
         raise HTTPException(403, "Developer access required")
     return user

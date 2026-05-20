@@ -154,6 +154,18 @@
             background: rgba(212,5,17,.1);
             color: var(--dhl-red);
         }
+        .portal-role-pill {
+            display: inline-flex;
+            align-items: center;
+            margin-left: .35rem;
+            padding: .12rem .45rem;
+            border-radius: 999px;
+            background: rgba(14,116,144,.12);
+            color: #0e7490;
+            font-size: .68rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
         .empty-state {
             text-align: center;
             padding: 48px 24px;
@@ -472,6 +484,10 @@
             }
 
             list.innerHTML = filteredUsers.map(({ user: u, index: idx }) => {
+                const isDeveloper = u.portal_role === 'developer';
+                const developerBadge = isDeveloper
+                    ? '<span class="portal-role-pill">Developer</span>'
+                    : '';
                 const apps = (u.apps || []).map(a => `
                     <span class="user-app-pill ${a.role === 'admin' ? 'admin' : ''}">
                         ${escapeHtml(APP_LABELS[a.app] || a.app)}: ${escapeHtml(a.role)}
@@ -481,13 +497,16 @@
                 return `
                     <div class="approval-row">
                         <div class="approval-info">
-                            <div class="approval-email">${escapeHtml(u.email)}</div>
+                            <div class="approval-email">${escapeHtml(u.email)}${developerBadge}</div>
                             <div class="approval-time">Approved ${formatDateTime(u.decided_at)}</div>
                             <div class="user-apps">${apps}</div>
                         </div>
                         <div class="approval-actions">
                             <button class="btn btn-secondary btn-sm" onclick="openEditAccess(${idx})">Edit Access</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteApprovedUser(${idx})">Delete</button>
+                            <button class="btn btn-secondary btn-sm" onclick="setPortalRole(${idx}, '${isDeveloper ? 'user' : 'developer'}')" ${u.is_root_developer ? 'disabled' : ''}>
+                                ${isDeveloper ? 'Demote Developer' : 'Promote Developer'}
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteApprovedUser(${idx})" ${u.is_root_developer ? 'disabled' : ''}>Delete</button>
                         </div>
                     </div>
                 `;
@@ -503,6 +522,7 @@
                     const haystack = [
                         user.email,
                         user.user_id,
+                        user.portal_role,
                         ...(user.apps || []).flatMap(a => [a.app, APP_LABELS[a.app], a.role]),
                     ].filter(Boolean).join(' ').toLowerCase();
                     return haystack.includes(q);
@@ -635,6 +655,22 @@
                 btn.textContent = 'Save access';
             }
         });
+
+        async function setPortalRole(index, portalRole) {
+            const user = usersList[index];
+            if (!user) return;
+            const action = portalRole === 'developer' ? 'promote' : 'demote';
+            const ok = confirm(`${action === 'promote' ? 'Promote' : 'Demote'} ${user.email} ${action === 'promote' ? 'to portal developer' : 'from portal developer'}?`);
+            if (!ok) return;
+
+            try {
+                await api.patch(`/api/admin/users/${user.user_id}/portal-role`, { portal_role: portalRole });
+                toast.success(`${action === 'promote' ? 'Promoted' : 'Demoted'} ${user.email}`);
+                await loadUsers();
+            } catch (e) {
+                toast.error(e.message);
+            }
+        }
 
         async function deleteApprovedUser(index) {
             const user = usersList[index];

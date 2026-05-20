@@ -80,22 +80,26 @@ def list_users(developer: dict = Depends(require_developer)):
     for user_id in user_ids:
         approved_row = approved_by_user.get(user_id) or {}
         email = approved_row.get("email")
+        portal_role = "user"
+        is_root_developer = False
 
-        if not email:
-            try:
-                auth_res = supabase.auth.admin.get_user_by_id(user_id)
-                auth_user = getattr(auth_res, "user", auth_res)
-                email = getattr(auth_user, "email", None)
-                if not email and isinstance(auth_user, dict):
-                    email = auth_user.get("email")
-            except Exception:
-                logger.exception("get_user_by_id failed for %s", user_id)
+        try:
+            auth_user = _load_auth_user(user_id)
+            auth_email = _auth_get(auth_user, "email")
+            email = email or auth_email
+            portal_role = _portal_role_for_auth_user(auth_user, email)
+            is_root_developer = _is_root_developer_email(email)
+        except Exception:
+            logger.exception("get_user_by_id failed for %s", user_id)
 
         users.append({
             "user_id": user_id,
             "email": email or user_id,
             "apps": by_user.get(user_id, []),
             "decided_at": approved_row.get("decided_at"),
+            "portal_role": portal_role,
+            "is_developer_portal": portal_role == "developer",
+            "is_root_developer": is_root_developer,
         })
 
     return sorted(
@@ -223,12 +227,74 @@ class DeleteUserRequest(BaseModel):
     email: str | None = None
 
 
-def _auth_email(auth_res) -> str | None:
+class UpdatePortalRoleRequest(BaseModel):
+    portal_role: Literal["developer", "user"]
+
+
+def _auth_user(auth_res):
     auth_user = getattr(auth_res, "user", auth_res)
-    email = getattr(auth_user, "email", None)
-    if not email and isinstance(auth_user, dict):
-        email = auth_user.get("email")
+    return auth_user
+
+
+def _auth_get(auth_user, field: str, default=None):
+    value = getattr(auth_user, field, None)
+    if value is None and isinstance(auth_user, dict):
+        value = auth_user.get(field)
+    return default if value is None else value
+
+
+def _auth_email(auth_res) -> str | None:
+    auth_user = _auth_user(auth_res)
+    email = _auth_get(auth_user, "email")
     return email.lower() if email else None
+
+
+def _auth_app_metadata(auth_user) -> dict:
+    metadata = _auth_get(auth_user, "app_metadata", {})
+    return metadata if isinstance(metadata, dict) else {}
+
+
+def _portal_role_for_auth_user(auth_user, email: str | None = None) -> str:
+    auth_email = (email or _auth_get(auth_user, "email") or "").lower()
+    metadata = _auth_app_metadata(auth_user)
+    if auth_email == settings.DEVELOPER_EMAIL.lower() or metadata.get("portal_role") == "developer":
+        return "developer"
+    return "user"
+
+
+def _is_root_developer_email(email: str | None) -> bool:
+    return (email or "").lower() == settings.DEVELOPER_EMAIL.lower()
+
+
+def _load_auth_user(user_id: str):
+    return _auth_user(supabase.auth.admin.get_user_by_id(user_id))
+
+
+def _set_portal_role(user_id: str, portal_role: str):
+    auth_user = _load_auth_user(user_id)
+    email = (_auth_get(auth_user, "email") or "").lower()
+    if _is_root_developer_email(email) and portal_role != "developer":
+        raise HTTPException(400, "Cannot demote the configured portal developer")
+
+    if portal_role == "developer":
+        metadata = {"portal_role": "developer"}
+    else:
+        # Supabase Auth app_metadata updates are merged, not replaced.
+        # Send null explicitly to clear an existing portal_role key.
+        metadata = {"portal_role": None}
+
+    try:
+        supabase.auth.admin.update_user_by_id(user_id, {"app_metadata": metadata})
+    except Exception:
+        logger.exception("update portal_role failed for %s", user_id)
+        raise HTTPException(500, "บันทึก portal role ไม่สำเร็จ")
+
+    return {
+        "user_id": user_id,
+        "email": email,
+        "portal_role": "developer" if portal_role == "developer" else "user",
+        "is_root_developer": _is_root_developer_email(email),
+    }
 
 
 def _is_auth_not_found_error(e: Exception) -> bool:
@@ -239,6 +305,18 @@ def _is_auth_not_found_error(e: Exception) -> bool:
         or "does not exist" in msg
         or "user not found" in msg
     )
+
+
+@router.patch("/users/{user_id}/portal-role")
+def update_user_portal_role(
+    user_id: str,
+    body: UpdatePortalRoleRequest,
+    developer: dict = Depends(require_developer),
+):
+    """Promote/demote a user for portal-level developer access."""
+    if body.portal_role == "user" and user_id == developer.get("sub"):
+        raise HTTPException(400, "Cannot demote your own developer access")
+    return _set_portal_role(user_id, body.portal_role)
 
 
 @router.patch("/users/{user_id}/access")

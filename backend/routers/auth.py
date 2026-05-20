@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from email_validator import EmailNotValidError, validate_email
 
-from dependencies import get_current_user
+from dependencies import get_current_user, is_portal_developer
 from services.supabase_client import supabase, db_execute
 from services.email_service import send_signup_notification, send_password_reset
 from config import settings
@@ -85,7 +85,7 @@ async def signup(body: SignupRequest):
     if existing.data:
         status = existing.data[0]["status"]
         if status == "pending":
-            raise HTTPException(409, "Email นี้รอ admin อนุมัติอยู่แล้ว")
+            raise HTTPException(409, "Email นี้รอ portal developer อนุมัติอยู่แล้ว")
         if status == "approved":
             raise HTTPException(409, "Email นี้ได้รับอนุมัติแล้ว — กรุณา login")
         # status == 'rejected' → allow re-signup (will overwrite below)
@@ -100,6 +100,8 @@ async def signup(body: SignupRequest):
             "password": body.password,
             "email_confirm": True,         # skip Supabase's email verification step
         }
+        if is_developer_bootstrap:
+            create_params["app_metadata"] = {"portal_role": "developer"}
         if not is_developer_bootstrap:
             create_params["ban_duration"] = "8760h"  # 1 year — cleared on approval
         created = supabase.auth.admin.create_user(create_params)
@@ -176,7 +178,7 @@ async def signup(body: SignupRequest):
 
     return {
         "ok": True,
-        "message": "สมัครเรียบร้อย — รอ admin อนุมัติทาง email",
+        "message": "สมัครเรียบร้อย — รอ portal developer อนุมัติทาง email",
     }
 
 
@@ -192,11 +194,13 @@ def me(user: dict = Depends(get_current_user)):
         .eq("user_id", user_id)
     ).data or []
 
+    portal_role = "developer" if is_portal_developer(user) else "user"
+
     return {
         "user_id": user_id,
         "email": email,
-        "is_developer_portal": (email or "").lower() == __import__("config").settings.DEVELOPER_EMAIL.lower(),
-        "portal_role": "developer" if (email or "").lower() == __import__("config").settings.DEVELOPER_EMAIL.lower() else "user",
+        "is_developer_portal": portal_role == "developer",
+        "portal_role": portal_role,
         "apps": access,
     }
 
