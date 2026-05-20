@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 resend.api_key = settings.RESEND_API_KEY
 
 _FROM = settings.EMAIL_FROM
-_ADMIN = settings.ADMIN_EMAIL
+_DEVELOPER = settings.DEVELOPER_EMAIL
 _PORTAL = settings.PORTAL_FRONTEND_URL.rstrip("/")
 
 
@@ -26,7 +26,7 @@ def _send(to: str, subject: str, html: str) -> dict:
 # ── Templates ────────────────────────────────────────────────────────────────
 
 def send_signup_notification(user_email: str) -> dict:
-    """Email admin when a new user signs up — link goes to approval page."""
+    """Email the portal developer when a new user signs up."""
     approval_url = f"{_PORTAL}/admin/approvals.html?email={user_email}"
     html = f"""
     <!DOCTYPE html>
@@ -63,7 +63,7 @@ def send_signup_notification(user_email: str) -> dict:
       </div>
     </body></html>
     """
-    return _send(_ADMIN, f"DSC Portal: ผู้สมัครใหม่ — {user_email}", html)
+    return _send(_DEVELOPER, f"DSC Portal: ผู้สมัครใหม่ — {user_email}", html)
 
 
 def send_approval_notification(user_email: str, apps: list[dict]) -> dict:

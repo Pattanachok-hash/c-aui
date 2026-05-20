@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Approvals - DSC Portal Admin</title>
+    <title>Approvals - DSC Portal Developer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap">
@@ -154,7 +154,6 @@
             background: rgba(212,5,17,.1);
             color: var(--dhl-red);
         }
-
         .empty-state {
             text-align: center;
             padding: 48px 24px;
@@ -245,7 +244,7 @@
 
     <div class="page-wrap">
         <div class="page-title" style="margin-bottom:1.5rem">
-            <h1>Portal Admin</h1>
+            <h1>Portal Developer</h1>
             <small id="count-label">Loading...</small>
         </div>
 
@@ -420,7 +419,7 @@
 
         function handleAdminLoadError(e, targetId) {
             if (e.status === 403) {
-                showAlert('alert-box', 'Admin access required');
+                showAlert('alert-box', 'Developer access required');
                 document.getElementById(targetId).innerHTML = '';
             } else {
                 showAlert('alert-box', e.message);

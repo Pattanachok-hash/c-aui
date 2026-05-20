@@ -54,9 +54,9 @@ def get_current_user(creds: HTTPAuthorizationCredentials = Depends(_bearer)) -> 
     }
 
 
-def require_admin(user: dict = Depends(get_current_user)) -> dict:
-    """Portal super-admin = pattanachok (config). Only this email can approve/reject."""
+def require_developer(user: dict = Depends(get_current_user)) -> dict:
+    """Portal developer = configured email. Only this user can manage portal users."""
     email = (user.get("email") or "").lower()
-    if email != settings.ADMIN_EMAIL.lower():
-        raise HTTPException(403, "Admin access required")
+    if email != settings.DEVELOPER_EMAIL.lower():
+        raise HTTPException(403, "Developer access required")
     return user

@@ -284,14 +284,14 @@
 </head>
 <body>
 
-  <!-- Topbar (user email, admin link, password, logout) -->
+  <!-- Topbar (user email, developer link, password, logout) -->
   <div class="portal-topbar" id="portal-topbar" style="display:none">
     <div class="who">
       <span class="user-email" id="portal-email"></span>
     </div>
     <div style="display:flex;gap:8px">
       <a id="portal-admin-link" class="topbtn topbtn-admin" href="/admin/approvals.html" style="display:none">
-        ⚙ Admin
+        ⚙ Developer
       </a>
       <a class="topbtn" href="/change-password.html">🔒 Password</a>
       <button class="topbtn" onclick="logout()">Logout</button>
@@ -382,7 +382,7 @@
 
       // Topbar
       document.getElementById('portal-email').textContent = info.email || '';
-      if (info.is_admin_portal) {
+      if (info.is_developer_portal) {
         document.getElementById('portal-admin-link').style.display = '';
       }
       document.getElementById('portal-topbar').style.display = '';

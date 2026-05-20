@@ -68,7 +68,7 @@ def _normalize_email(raw: str) -> str:
 
 @router.post("/signup")
 async def signup(body: SignupRequest):
-    """Create a banned auth user + pending_approvals row, then email admin."""
+    """Create a banned auth user + pending_approvals row, then email developer."""
     email = _normalize_email(body.email)
 
     pw_err = _validate_password(body.password)
@@ -90,9 +90,9 @@ async def signup(body: SignupRequest):
             raise HTTPException(409, "Email นี้ได้รับอนุมัติแล้ว — กรุณา login")
         # status == 'rejected' → allow re-signup (will overwrite below)
 
-    # 2) Bootstrap: the configured ADMIN_EMAIL auto-approves (no ban, no review queue).
-    #    Anyone else gets a 1-year ban until admin approves.
-    is_admin_bootstrap = email == settings.ADMIN_EMAIL.lower()
+    # 2) Bootstrap: the configured DEVELOPER_EMAIL auto-approves (no ban, no review queue).
+    #    Anyone else gets a 1-year ban until the portal developer approves.
+    is_developer_bootstrap = email == settings.DEVELOPER_EMAIL.lower()
 
     try:
         create_params = {
@@ -100,7 +100,7 @@ async def signup(body: SignupRequest):
             "password": body.password,
             "email_confirm": True,         # skip Supabase's email verification step
         }
-        if not is_admin_bootstrap:
+        if not is_developer_bootstrap:
             create_params["ban_duration"] = "8760h"  # 1 year — cleared on approval
         created = supabase.auth.admin.create_user(create_params)
         user_id = created.user.id
@@ -111,8 +111,8 @@ async def signup(body: SignupRequest):
         logger.exception("create_user failed")
         raise HTTPException(500, f"สร้างผู้ใช้ไม่สำเร็จ: {msg}")
 
-    # If admin email — auto-approve + grant all apps as admin
-    if is_admin_bootstrap:
+    # If portal developer email — auto-approve + grant app-admin access to all apps.
+    if is_developer_bootstrap:
         try:
             from datetime import datetime, timezone
             db_execute(
@@ -122,7 +122,7 @@ async def signup(body: SignupRequest):
                         "user_id": user_id,
                         "status": "approved",
                         "decided_at": datetime.now(timezone.utc).isoformat(),
-                        "note": "Auto-approved (admin bootstrap)",
+                        "note": "Auto-approved (portal developer bootstrap)",
                     },
                     on_conflict="email",
                 ),
@@ -140,8 +140,8 @@ async def signup(body: SignupRequest):
                 idempotent=False,
             )
         except Exception:
-            logger.exception("Admin bootstrap upserts failed (continuing)")
-        return {"ok": True, "message": "Admin บัญชีถูกสร้างและเปิดใช้งานแล้ว"}
+            logger.exception("Portal developer bootstrap upserts failed (continuing)")
+        return {"ok": True, "message": "Developer บัญชีถูกสร้างและเปิดใช้งานแล้ว"}
 
     # 3) Insert / upsert pending_approvals
     try:
@@ -168,7 +168,7 @@ async def signup(body: SignupRequest):
         logger.exception("Insert pending_approvals failed")
         raise HTTPException(500, "บันทึก pending_approvals ไม่สำเร็จ")
 
-    # 4) Notify admin via email — best effort (don't fail signup if email fails)
+    # 4) Notify portal developer via email — best effort (don't fail signup if email fails)
     try:
         send_signup_notification(email)
     except Exception:
@@ -195,7 +195,8 @@ def me(user: dict = Depends(get_current_user)):
     return {
         "user_id": user_id,
         "email": email,
-        "is_admin_portal": (email or "").lower() == __import__("config").settings.ADMIN_EMAIL.lower(),
+        "is_developer_portal": (email or "").lower() == __import__("config").settings.DEVELOPER_EMAIL.lower(),
+        "portal_role": "developer" if (email or "").lower() == __import__("config").settings.DEVELOPER_EMAIL.lower() else "user",
         "apps": access,
     }
 

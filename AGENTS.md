@@ -7,10 +7,10 @@
 - Shipping Co. (`shipco.c-aui.com`) — booking & local charges
 
 Portal เป็นจุดเดียวที่ user ใช้:
-- สมัครใหม่ (รอ admin อนุมัติทาง email)
+- สมัครใหม่ (รอ portal developer อนุมัติทาง email)
 - Login → SSO ไปทุก app ที่ได้รับสิทธิ์
 - เปลี่ยน password / ลืม password
-- Admin: list/approve/reject pending signups + จัดการ per-app permissions
+- Portal developer: list/approve/reject pending signups + จัดการ per-app permissions
 
 ## Architecture (Option B — bootstrap phase)
 ```
@@ -53,7 +53,7 @@ c-aui/
 └── backend/
     ├── main.py                ← FastAPI app + CORS
     ├── config.py              ← env settings (pydantic-settings)
-    ├── dependencies.py        ← get_current_user / require_admin
+    ├── dependencies.py        ← get_current_user / require_developer
     ├── requirements.txt
     ├── .env.example
     ├── routers/
@@ -73,7 +73,7 @@ c-aui/
 | app | TEXT | PK part 2 — 'warehouse' / 'transport' / 'shipco' |
 | role | TEXT | 'admin' or 'operator' |
 | granted_at | TIMESTAMPTZ | |
-| granted_by | UUID | who granted (admin user_id) |
+| granted_by | UUID | who granted (portal developer user_id) |
 
 ### `pending_approvals` — signup queue
 | col | type | note |
@@ -84,7 +84,7 @@ c-aui/
 | status | TEXT | 'pending' / 'approved' / 'rejected' |
 | requested_at | TIMESTAMPTZ | |
 | decided_at | TIMESTAMPTZ | |
-| decided_by | UUID | admin user_id |
+| decided_by | UUID | portal developer user_id |
 | note | TEXT | reason for rejection (optional) |
 
 ### `password_reset_tokens` — custom reset flow (we don't use Supabase's built-in)
@@ -99,10 +99,10 @@ c-aui/
 
 ## Key Conventions
 
-### Bootstrap admin
-- Admin email = `settings.ADMIN_EMAIL` (currently `pattanachok_msn@hotmail.com`)
-- On signup, if email matches ADMIN_EMAIL → auto-approve + grant admin role on ALL apps (no ban, no queue)
-- Anyone else: ban 1 year + add to pending_approvals + email admin
+### Bootstrap portal developer
+- Developer email = `settings.DEVELOPER_EMAIL` (currently `pattanachok_msn@hotmail.com`)
+- On signup, if email matches DEVELOPER_EMAIL → auto-approve + grant app-admin access on ALL apps (no ban, no queue)
+- Anyone else: ban 1 year + add to pending_approvals + email portal developer
 
 ### JWT verification
 - Supabase now signs with **ES256** (asymmetric) — we **don't decode locally** with HS256 secret
@@ -117,8 +117,8 @@ c-aui/
 - All email sends are wrapped in `try/except` and never fail the parent request
 - A scan / approval / signup succeeds even if Resend goes down
 
-### "Admin" definition
-- **Portal super-admin** = email matches `ADMIN_EMAIL` config — only this person can approve/reject signups + manage permissions
+### "Developer" vs "Admin" definition
+- **Portal developer** = email matches `DEVELOPER_EMAIL` config — only this person can approve/reject signups + manage permissions
 - **App admin** = `user_app_access.role = 'admin'` for that specific app — used by each app's own backend (warehouse-scanner, etc.)
 
 ## API Endpoints (`api.c-aui.com/api/*`)
@@ -126,7 +126,7 @@ c-aui/
 ### Public
 | Method | Path | Purpose |
 |--------|------|---------|
-| POST | `/auth/signup` | สมัครใหม่ — ban + email admin (auto-approve ถ้าเป็น ADMIN_EMAIL) |
+| POST | `/auth/signup` | สมัครใหม่ — ban + email portal developer (auto-approve ถ้าเป็น DEVELOPER_EMAIL) |
 | POST | `/auth/forgot-password` | gen token + email reset link (never reveals if email exists) |
 | POST | `/auth/reset-password` | validate token + update password |
 
@@ -136,7 +136,7 @@ c-aui/
 | GET  | `/auth/me` | user info + `apps` list (from user_app_access) |
 | POST | `/auth/change-password` | verify current + update (no admin needed) |
 
-### Portal admin only (`email == ADMIN_EMAIL`)
+### Portal developer only (`email == DEVELOPER_EMAIL`)
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET   | `/admin/pending-approvals` | list pending signups |
@@ -149,7 +149,7 @@ c-aui/
 ดูตัวอย่างใน `backend/.env.example`
 - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`
 - `RESEND_API_KEY`, `EMAIL_FROM` (default `noreply@c-aui.com`)
-- `ADMIN_EMAIL` (default `pattanachok_msn@hotmail.com`)
+- `DEVELOPER_EMAIL` (default `pattanachok_msn@hotmail.com`)
 - `PORTAL_FRONTEND_URL` (default `https://c-aui.com`)
 - `CORS_ALLOW_ORIGIN_REGEX` (default allows c-aui.com + localhost)
 
@@ -178,6 +178,6 @@ Plan: share via cookie on `.c-aui.com` (parent domain) so login at portal → al
 - **Frontend on GitHub Pages**: free + CDN. ถ้าจะใช้ Server-Side Rendering ภายหลัง ต้องเปลี่ยน
 - **No backend for login**: login ทำ client-side ผ่าน Supabase SDK โดยตรง — backend แค่ตรวจ JWT ผ่าน /auth/v1/user
 - **Forgot password custom (not Supabase built-in)**: เลือก custom เพื่อ branded email + consistent UX กับ signup notification
-- **Portal admin = single email**: ตอนนี้แค่ pattanachok_msn — ถ้าอยากให้หลายคน approve ได้ ต้องเปลี่ยน `require_admin` ให้ check user_app_access แทน
+- **Portal developer = single email**: ตอนนี้แค่ pattanachok_msn — ถ้าอยากให้หลายคน approve ได้ ต้องเปลี่ยน `require_developer` ให้ check portal-level role แทน
 
 ## ก่อนแก้ไขอะไรให้ขอ approve จากผู้ใช้ก่อนทุกครั้ง

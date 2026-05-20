@@ -38,7 +38,7 @@ Open with `http://localhost:5500/...`, not `127.0.0.1`, because local CORS allow
 
 ### Work completed in this session
 
-Admin UI:
+Portal developer UI:
 - Rebuilt `admin/approvals.html` to include two tabs:
   - `Pending Approvals`
   - `Approved Users`
@@ -48,7 +48,7 @@ Admin UI:
   - `warehouse`
   - `transport`
   - `shipco`
-  - role: `operator` or `admin`
+  - app role: `operator` or `admin`
 - Save calls `PATCH /api/admin/users/{user_id}/access`.
 - Added approved-user search box.
   - Searches email, user_id, app key, app label, and role.
@@ -57,7 +57,7 @@ Admin UI:
   - Uses confirm prompt.
   - Sends `DELETE /api/admin/users/{user_id}` with body `{ email }`.
 
-Backend admin:
+Backend portal developer:
 - Changed `GET /api/admin/users`.
   - It now uses `user_app_access` as the main source of truth.
   - It also merges approved users from `pending_approvals`.
@@ -70,7 +70,7 @@ Backend admin:
     - `user_app_access`
     - `pending_approvals`
     - `password_reset_tokens`
-  - Blocks deleting `ADMIN_EMAIL`.
+  - Blocks deleting `DEVELOPER_EMAIL`.
   - Made more idempotent:
     - if Auth user is already missing, it still cleans stale DB rows.
     - frontend now sends email fallback in DELETE body.
@@ -171,7 +171,7 @@ Before commit, inspect staged files carefully.
 - Cross-subdomain SSO not done.
 - Transport and shipco/booking apps are not integrated with portal login yet.
 - Warehouse integration still needs review; especially ensure users without `app='warehouse'` are rejected rather than silently treated as operator.
-- Admin action audit log is not implemented yet.
+- Portal developer action audit log is not implemented yet.
 - Delete confirmation is still browser `confirm`; future production hardening could use a modal requiring email confirmation.
 
 ### User preferences / caution
@@ -210,10 +210,10 @@ Before commit, inspect staged files carefully.
 
 ## Overview
 Portal กลางสำหรับ login + จัดการสิทธิ์เข้าใช้ apps:
-- สมัครใหม่ (รอ admin อนุมัติทาง email)
+- สมัครใหม่ (รอ portal developer อนุมัติทาง email)
 - Login → (ในอนาคต) SSO ไปทุก app ที่ได้รับสิทธิ์
 - เปลี่ยน password / ลืม password
-- Admin: list/approve/reject pending signups + จัดการ per-app permissions
+- Portal developer: list/approve/reject pending signups + จัดการ per-app permissions
 
 ## Architecture
 ```
@@ -262,7 +262,7 @@ c-aui/
 └── backend/
     ├── main.py                ← FastAPI app + CORS
     ├── config.py              ← env settings (pydantic-settings)
-    ├── dependencies.py        ← get_current_user / require_admin
+    ├── dependencies.py        ← get_current_user / require_developer
     ├── requirements.txt
     ├── .env                   ← REAL credentials (gitignored)
     ├── .env.example
@@ -315,17 +315,17 @@ c-aui/
   ```
 - ถ้า 200 → ได้ user object → return claims dict
 
-### Admin gate (`require_admin`)
-- Portal super-admin = email matches `settings.ADMIN_EMAIL`
-- ไม่ใช้ user_app_access สำหรับ portal admin (เป็น single email config-driven)
+### Developer gate (`require_developer`)
+- Portal developer = email matches `settings.DEVELOPER_EMAIL`
+- ไม่ใช้ user_app_access สำหรับ portal developer (เป็น single email config-driven)
 
 ### Signup
 1. Frontend → POST `/api/auth/signup` พร้อม email + password
 2. Backend ตรวจ pending_approvals
-3. ถ้า email = `ADMIN_EMAIL` → **auto-approve** + grant admin ทุก app
-4. ถ้าไม่ใช่ → สร้าง user + ban 1 ปี + insert pending_approvals + email admin
-5. Admin คลิก link ใน email → ไป `/admin/approvals.html?email=xxx`
-6. Admin เลือก apps + roles → กดอนุมัติ
+3. ถ้า email = `DEVELOPER_EMAIL` → **auto-approve** + grant app-admin access ทุก app
+4. ถ้าไม่ใช่ → สร้าง user + ban 1 ปี + insert pending_approvals + email portal developer
+5. Portal developer คลิก link ใน email → ไป `/admin/approvals.html?email=xxx`
+6. Portal developer เลือก apps + roles → กดอนุมัติ
 7. Backend `/admin/approve-user/{id}`: unban + upsert user_app_access + email user
 
 ### Forgot password (custom — ไม่ใช่ Supabase built-in)
@@ -339,7 +339,7 @@ c-aui/
 ## API Endpoints (`api.c-aui.com/api/*`)
 
 ### Public
-- POST `/auth/signup` — สมัครใหม่ (ban + email admin, auto-approve admin email)
+- POST `/auth/signup` — สมัครใหม่ (ban + email portal developer, auto-approve developer email)
 - POST `/auth/forgot-password` — gen token + email reset link (never reveals if email exists)
 - POST `/auth/reset-password` — validate token + update password
 
@@ -347,7 +347,7 @@ c-aui/
 - GET `/auth/me` — user info + `apps` list (from user_app_access)
 - POST `/auth/change-password` — verify current + update (Supabase admin API)
 
-### Portal admin only (`email == ADMIN_EMAIL`)
+### Portal developer only (`email == DEVELOPER_EMAIL`)
 - GET `/admin/pending-approvals` — list pending signups
 - POST `/admin/approve-user/{id}` — unban + grant `apps` array + email user
 - POST `/admin/reject-user/{id}` — delete auth user + email user
@@ -364,7 +364,7 @@ c-aui/
 - `SUPABASE_JWT_SECRET` — Legacy JWT Secret (ใช้สำรอง แม้ตอนนี้ verify ผ่าน /auth/v1/user)
 - `RESEND_API_KEY` — เริ่มจาก `re_...` (existing key from warehouse-scanner Onboarding)
 - `EMAIL_FROM` = `noreply@c-aui.com`
-- `ADMIN_EMAIL` = `pattanachok_msn@hotmail.com` (portal super-admin)
+- `DEVELOPER_EMAIL` = `pattanachok_msn@hotmail.com` (portal developer)
 - `PORTAL_FRONTEND_URL` = `https://c-aui.com` หรือ `http://localhost:5500` (dev)
 - `CORS_ALLOW_ORIGIN_REGEX` = `^(http://localhost:\d+|https?://(.*\.)?c-aui\.com)$`
 
@@ -386,7 +386,7 @@ python -m http.server 5500
 # Open in browser:
 #   http://localhost:5500/login.html
 #   http://localhost:5500/signup.html
-#   http://localhost:5500/admin/approvals.html (login as admin first)
+#   http://localhost:5500/admin/approvals.html (login as portal developer first)
 ```
 
 `js/api.js` auto-detects localhost and points to `http://localhost:8000`. Override via `?api=http://other:port` query string.
@@ -404,7 +404,7 @@ python -m http.server 5500
 - **Frontend on GitHub Pages**: free CDN. ถ้าจะ SSR ภายหลังต้องเปลี่ยน.
 - **No backend for login**: login = client-side via Supabase SDK. Backend แค่ตรวจ JWT.
 - **Forgot password custom**: เพื่อ branded email matching signup notification.
-- **Portal admin = single email**: hardcoded in config. Multi-admin = refactor `require_admin` to check user_app_access.
+- **Portal developer = single email**: hardcoded in config. Multi-developer = refactor `require_developer` to check a portal-level role.
 - **Cross-subdomain SSO ยังไม่ทำ**: ปัจจุบันแต่ละ subdomain มี localStorage แยก → user ต้อง login ต่อ subdomain
   - **Plan A:** cookie storage adapter บน `.c-aui.com` parent domain (ทำให้ SDK เก็บ session ที่ใช้ได้ข้าม subdomain)
   - **Plan B:** URL fragment relay (portal redirect ไปพร้อม `#access_token=...`)

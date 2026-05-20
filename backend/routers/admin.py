@@ -1,13 +1,13 @@
-"""Admin endpoints (portal super-admin only).
+"""Portal user-management endpoints (portal developer only).
 
-Only the email in settings.ADMIN_EMAIL can use these endpoints.
+Only the portal developer email in settings.DEVELOPER_EMAIL can use these endpoints.
 """
 import logging
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Literal
 
-from dependencies import require_admin
+from dependencies import require_developer
 from config import settings
 from services.supabase_client import supabase, db_execute
 from services.email_service import send_approval_notification, send_rejection_notification
@@ -38,7 +38,7 @@ class RejectRequest(BaseModel):
 # ── Endpoints ────────────────────────────────────────────────────────────────
 
 @router.get("/pending-approvals")
-def list_pending(admin: dict = Depends(require_admin)):
+def list_pending(developer: dict = Depends(require_developer)):
     """List signup requests that are still pending."""
     res = db_execute(
         supabase.table("pending_approvals")
@@ -50,7 +50,7 @@ def list_pending(admin: dict = Depends(require_admin)):
 
 
 @router.get("/users")
-def list_users(admin: dict = Depends(require_admin)):
+def list_users(developer: dict = Depends(require_developer)):
     """List users managed by the portal + their per-app access.
 
     Source of truth for access is user_app_access. pending_approvals only
@@ -106,7 +106,7 @@ def list_users(admin: dict = Depends(require_admin)):
 
 
 @router.post("/approve-user/{pending_id}")
-async def approve_user(pending_id: str, body: ApproveRequest, admin: dict = Depends(require_admin)):
+async def approve_user(pending_id: str, body: ApproveRequest, developer: dict = Depends(require_developer)):
     """Unban user, grant requested apps + roles, email user, mark approved."""
     if not body.apps:
         raise HTTPException(400, "ต้องระบุอย่างน้อย 1 app + role")
@@ -136,7 +136,7 @@ async def approve_user(pending_id: str, body: ApproveRequest, admin: dict = Depe
     # 3) Grant per-app access (idempotent upsert)
     try:
         rows = [
-            {"user_id": user_id, "app": g.app, "role": g.role, "granted_by": admin.get("sub")}
+            {"user_id": user_id, "app": g.app, "role": g.role, "granted_by": developer.get("sub")}
             for g in body.apps
         ]
         db_execute(
@@ -154,7 +154,7 @@ async def approve_user(pending_id: str, body: ApproveRequest, admin: dict = Depe
             supabase.table("pending_approvals").update({
                 "status": "approved",
                 "decided_at": datetime.now(timezone.utc).isoformat(),
-                "decided_by": admin.get("sub"),
+                "decided_by": developer.get("sub"),
             }).eq("id", pending_id),
         )
     except Exception:
@@ -170,7 +170,7 @@ async def approve_user(pending_id: str, body: ApproveRequest, admin: dict = Depe
 
 
 @router.post("/reject-user/{pending_id}")
-async def reject_user(pending_id: str, body: RejectRequest, admin: dict = Depends(require_admin)):
+async def reject_user(pending_id: str, body: RejectRequest, developer: dict = Depends(require_developer)):
     """Delete auth user, mark pending row rejected, email user."""
     row = db_execute(
         supabase.table("pending_approvals")
@@ -199,7 +199,7 @@ async def reject_user(pending_id: str, body: RejectRequest, admin: dict = Depend
             supabase.table("pending_approvals").update({
                 "status": "rejected",
                 "decided_at": datetime.now(timezone.utc).isoformat(),
-                "decided_by": admin.get("sub"),
+                "decided_by": developer.get("sub"),
                 "note": body.note,
             }).eq("id", pending_id),
         )
@@ -242,7 +242,7 @@ def _is_auth_not_found_error(e: Exception) -> bool:
 
 
 @router.patch("/users/{user_id}/access")
-def update_user_access(user_id: str, body: UpdateAccessRequest, admin: dict = Depends(require_admin)):
+def update_user_access(user_id: str, body: UpdateAccessRequest, developer: dict = Depends(require_developer)):
     """Replace a user's per-app access set (admin tweaks roles / grants new apps)."""
     # 1) Delete existing access rows
     db_execute(
@@ -252,7 +252,7 @@ def update_user_access(user_id: str, body: UpdateAccessRequest, admin: dict = De
     # 2) Insert new set (if any)
     if body.apps:
         rows = [
-            {"user_id": user_id, "app": g.app, "role": g.role, "granted_by": admin.get("sub")}
+            {"user_id": user_id, "app": g.app, "role": g.role, "granted_by": developer.get("sub")}
             for g in body.apps
         ]
         db_execute(
@@ -264,7 +264,7 @@ def update_user_access(user_id: str, body: UpdateAccessRequest, admin: dict = De
 
 
 @router.delete("/users/{user_id}")
-def delete_user(user_id: str, body: DeleteUserRequest | None = None, admin: dict = Depends(require_admin)):
+def delete_user(user_id: str, body: DeleteUserRequest | None = None, developer: dict = Depends(require_developer)):
     """Delete an auth user and portal records so the email can sign up again.
 
     Idempotent enough for legacy/stale rows: if Auth user is already gone, we
@@ -281,8 +281,8 @@ def delete_user(user_id: str, body: DeleteUserRequest | None = None, admin: dict
         else:
             logger.exception("get_user_by_id failed before delete for %s", user_id)
 
-    if auth_email == settings.ADMIN_EMAIL.lower() or fallback_email == settings.ADMIN_EMAIL.lower():
-        raise HTTPException(400, "Cannot delete the portal admin account")
+    if auth_email == settings.DEVELOPER_EMAIL.lower() or fallback_email == settings.DEVELOPER_EMAIL.lower():
+        raise HTTPException(400, "Cannot delete the portal developer account")
 
     email = auth_email or fallback_email
     auth_deleted = False
