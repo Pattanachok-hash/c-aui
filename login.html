@@ -11,9 +11,9 @@
     <style>
         .login-card {
             width: 100%;
-            max-width: 440px;
+            max-width: min(440px, calc(100vw - 32px));
             position: relative;
-            padding-top: 88px;
+            padding-top: 96px;
             animation: card-rise .5s cubic-bezier(.22,.61,.36,1);
         }
         @keyframes card-rise {
@@ -22,14 +22,14 @@
         }
         .login-card .card {
             border-radius: 24px;
-            padding: 44px 32px 32px;
+            padding: 76px 32px 32px;
             overflow: visible;
         }
         .panda-lounge {
             position: absolute;
             top: 0;
             left: 50%;
-            width: 220px;
+            width: 236px;
             height: 132px;
             transform: translateX(-50%);
             z-index: 3;
@@ -38,7 +38,7 @@
         .panda-head {
             position: absolute;
             left: 50%;
-            top: 12px;
+            top: 0;
             width: 132px;
             height: 108px;
             transform: translateX(-50%);
@@ -48,7 +48,7 @@
         }
         .panda-ear {
             position: absolute;
-            top: 6px;
+            top: -6px;
             width: 48px;
             height: 48px;
             background: #1f1f1f;
@@ -110,8 +110,8 @@
         }
         .panda-arm {
             position: absolute;
-            top: 104px;
-            width: 86px;
+            top: 86px;
+            width: 96px;
             height: 34px;
             background: #252525;
             border-radius: 999px;
@@ -125,12 +125,9 @@
             right: 6px;
             transform: rotate(-7deg);
         }
-        .login-title {
-            text-align: center;
-            color: var(--gray-900);
-            font-size: 1.05rem;
-            font-weight: 900;
-            margin-bottom: 22px;
+        .login-card input:focus {
+            border-color: #f0b90b;
+            box-shadow: 0 0 0 4px rgba(255,204,0,.2);
         }
         .signup-link {
             text-align: center;
@@ -145,8 +142,12 @@
         }
         .signup-link a:hover { text-decoration: underline; }
         @media (max-width: 480px) {
-            .login-card { padding-top: 76px; }
-            .login-card .card { padding: 38px 22px 28px; }
+            .login-card {
+                width: calc(100vw - 40px);
+                max-width: 350px;
+                padding-top: 86px;
+            }
+            .login-card .card { padding: 68px 22px 28px; }
             .panda-lounge {
                 width: 190px;
                 height: 118px;
@@ -173,7 +174,6 @@
             </div>
 
             <div class="card">
-                <div class="login-title">Smart Export Login</div>
                 <div id="alert-box"></div>
                 <div class="form-group">
                     <label>Email</label>
