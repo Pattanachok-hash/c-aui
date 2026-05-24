@@ -378,14 +378,22 @@
       // Show only granted cards
       const granted = new Set(info.apps.map(a => a.app));
       cardsEl.querySelectorAll('.card[data-app]').forEach(card => {
-        if (card.dataset.app === 'warehouse') {
-          card.href = buildSessionRelayUrl('https://warehouse.c-aui.com/login.html', session, '/dashboard.html');
-        }
         if (granted.has(card.dataset.app)) card.classList.add('show');
       });
+      const warehouseCard = cardsEl.querySelector('.card[data-app="warehouse"]');
+      if (warehouseCard?.classList.contains('show')) {
+        warehouseCard.addEventListener('click', relayToWarehouse);
+      }
       stateEl.style.display = 'none';
       cardsEl.style.display = '';
     })();
+
+    async function relayToWarehouse(event) {
+      event.preventDefault();
+      const session = await getCurrentSession();
+      if (!session) { window.location.href = '/login.html'; return; }
+      window.location.href = buildSessionRelayUrl('https://warehouse.c-aui.com/login.html', session, '/dashboard.html');
+    }
 
     function buildSessionRelayUrl(targetUrl, session, nextPath) {
       const url = new URL(targetUrl);
