@@ -6,192 +6,447 @@
     <title>Login - DSC Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- portal.css gives us --dhl-red / --dhl-yellow tokens + .alert classes. We override page-specific styles below. -->
     <link rel="stylesheet" href="/css/portal.css">
     <style>
-        .login-card {
-            width: 100%;
-            max-width: min(440px, calc(100vw - 32px));
+        /* ── Page-scoped overrides: cream background, no glassmorphism, no blurred circles ── */
+        :root {
+            --ink:        #0a0a0a;
+            --ink-muted:  rgba(10, 10, 10, 0.55);
+            --ink-faint:  rgba(10, 10, 10, 0.08);
+            --bg-cream:   #fffbeb;
+        }
+        html, body {
+            min-height: 100vh;
+            background: var(--bg-cream);
+            font-family: 'IBM Plex Sans Thai', 'Space Grotesk', system-ui, -apple-system, sans-serif;
+            color: var(--ink);
+            overflow-x: hidden;
+        }
+        /* kill the decorative blurred circles from portal.css */
+        body::before, body::after { content: none; display: none; }
+
+        /* ── Page shell ─────────────────────────────────────── */
+        .stage {
             position: relative;
-            padding-top: 96px;
-            animation: card-rise .5s cubic-bezier(.22,.61,.36,1);
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
         }
-        @keyframes card-rise {
-            from { opacity: 0; transform: translateY(20px) scale(.98); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .login-card .card {
-            border-radius: 24px;
-            padding: 76px 32px 32px;
-            overflow: visible;
-        }
-        .panda-lounge {
+        .stripe {
             position: absolute;
-            top: 0;
-            left: 50%;
-            width: 236px;
-            height: 132px;
-            transform: translateX(-50%);
-            z-index: 3;
+            background: var(--dhl-yellow);
+            transform: rotate(-12deg);
             pointer-events: none;
+            z-index: 0;
         }
-        .panda-head {
+        .stripe-top    { top: -30%;    left: -30%;  width: 160%; height: 60px; opacity: .5; }
+        .stripe-bottom { bottom: -20%; right: -30%; width: 160%; height: 40px; opacity: .35; }
+
+        /* ── Top bar ────────────────────────────────────────── */
+        .topbar-mini {
             position: absolute;
-            left: 50%;
-            top: 0;
-            width: 132px;
-            height: 108px;
-            transform: translateX(-50%);
-            background: #fffaf0;
-            border-radius: 52% 52% 46% 46%;
-            box-shadow: 0 12px 28px rgba(17,24,39,.12);
+            top: 28px; left: 36px; right: 36px;
+            z-index: 4;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .panda-ear {
-            position: absolute;
-            top: -6px;
-            width: 48px;
-            height: 48px;
-            background: #1f1f1f;
+        .brand-mark {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .brand-dot {
+            width: 10px; height: 10px;
             border-radius: 50%;
-            z-index: -1;
+            background: var(--dhl-red);
         }
-        .panda-ear.left { left: 34px; }
-        .panda-ear.right { right: 34px; }
-        .panda-eye-patch {
-            position: absolute;
-            top: 38px;
-            width: 34px;
-            height: 42px;
-            background: #232323;
-            border-radius: 50%;
-            transform: rotate(12deg);
+        .brand-name {
+            font-size: 13px; font-weight: 700;
+            letter-spacing: -0.01em;
+            color: var(--ink);
         }
-        .panda-eye-patch.left { left: 29px; }
-        .panda-eye-patch.right { right: 29px; transform: rotate(-12deg); }
-        .panda-eye {
-            position: absolute;
-            top: 11px;
-            left: 10px;
-            width: 13px;
-            height: 13px;
-            border-radius: 50%;
-            background: #fff;
-            box-shadow: inset -3px -3px 0 #6b3f22;
+        .brand-tagline {
+            font-size: 12px;
+            color: var(--ink-muted);
+            margin-left: 4px;
         }
-        .panda-eye::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 3px;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: #fff;
-        }
-        .panda-nose {
-            position: absolute;
-            left: 50%;
-            top: 69px;
-            width: 22px;
-            height: 15px;
-            transform: translateX(-50%);
-            background: #171717;
-            border-radius: 48% 48% 58% 58%;
-        }
-        .panda-mouth {
-            position: absolute;
-            left: 50%;
-            top: 87px;
-            width: 24px;
-            height: 10px;
-            transform: translateX(-50%);
-            border-bottom: 3px solid #3f1d1d;
-            border-radius: 0 0 999px 999px;
-        }
-        .panda-arm {
-            position: absolute;
-            top: 86px;
-            width: 96px;
-            height: 34px;
-            background: #252525;
-            border-radius: 999px;
-            box-shadow: 0 9px 18px rgba(17,24,39,.14);
-        }
-        .panda-arm.left {
-            left: 6px;
-            transform: rotate(7deg);
-        }
-        .panda-arm.right {
-            right: 6px;
-            transform: rotate(-7deg);
-        }
-        .login-card input:focus {
-            border-color: #f0b90b;
-            box-shadow: 0 0 0 4px rgba(255,204,0,.2);
-        }
-        .signup-link {
-            text-align: center;
-            margin-top: 18px;
-            font-size: .86rem;
-            color: var(--gray-600);
-        }
-        .signup-link a {
-            color: var(--dhl-red);
-            font-weight: 700;
+        .help-link {
+            font-size: 12px;
+            color: var(--ink-muted);
             text-decoration: none;
         }
-        .signup-link a:hover { text-decoration: underline; }
+        .help-link:hover { color: var(--ink); }
+
+        /* ── Center stack ───────────────────────────────────── */
+        .stack {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 28px;
+            padding: 0 16px;
+        }
+
+        /* ── Sticker (panda badge) ──────────────────────────── */
+        .sticker-wrap {
+            position: relative;
+            transition: transform 0.6s cubic-bezier(.2,.7,.3,1);
+            will-change: transform;
+        }
+        .sticker {
+            width: 180px; height: 180px;
+            border-radius: 50%;
+            background: var(--dhl-yellow);
+            /* Outer red ring deepened to match the design screenshot
+               (spec was rgba .2 — too faint; bumped to solid DHL red and thickened to 4px). */
+            box-shadow:
+                0 0 0 8px #ffffff,
+                0 0 0 10px var(--dhl-red),
+                0 22px 36px -12px rgba(0, 0, 0, 0.22);
+            overflow: hidden;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            transition: transform 0.5s cubic-bezier(.2,.7,.3,1);
+            will-change: transform;
+        }
+        .panda-frame {
+            width: 200px; height: 240px;
+            margin-top: 18px;
+            /* Drop-shadows match panda.jsx cute variant — red glow + soft black
+               These bleed onto the yellow sticker background, creating gradient depth. */
+            filter: drop-shadow(0 24px 30px rgba(239, 59, 48, 0.28))
+                    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+            transition: transform 0.45s cubic-bezier(.2,.7,.3,1);
+            will-change: transform;
+        }
+        .tag {
+            position: absolute;
+            top: -6px; right: -28px;
+            transform: rotate(8deg);
+            background: var(--dhl-red);
+            color: var(--dhl-yellow);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+        }
+
+        /* ── Greeting ───────────────────────────────────────── */
+        .greeting {
+            text-align: center;
+        }
+        .greeting h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            line-height: 1.2;
+        }
+        .greeting p {
+            margin: 4px 0 0;
+            font-size: 13px;
+            color: var(--ink-muted);
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+        }
+
+        /* ── Form ───────────────────────────────────────────── */
+        .form {
+            width: 100%;
+            max-width: 340px;
+        }
+        .alert-slot { margin-bottom: 10px; }
+
+        /* Pill input — overrides portal.css default input style for this page */
+        .pill {
+            display: flex; align-items: center; gap: 10px;
+            background: #fff;
+            border: 1.5px solid var(--ink-faint);
+            border-radius: 999px;
+            padding: 0 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.18s;
+        }
+        .pill.is-focused {
+            border-color: var(--dhl-red);
+            box-shadow: 0 0 0 4px rgba(212, 5, 17, 0.13), 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+        .pill + .pill { margin-top: 10px; }
+        .pill input[type="email"],
+        .pill input[type="password"] {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 14px 0;
+            color: var(--ink);
+            font-family: inherit;
+            font-size: 14px;
+            width: 100%;
+        }
+        .pill input::placeholder { color: rgba(10, 10, 10, 0.3); }
+        .pill input:focus { box-shadow: none; border: none; }
+        /* Override Chrome / Safari autofill — they paint a blue/yellow background
+           that bleeds through transparent inputs. Force white via inset shadow. */
+        .pill input:-webkit-autofill,
+        .pill input:-webkit-autofill:hover,
+        .pill input:-webkit-autofill:focus,
+        .pill input:-webkit-autofill:active {
+            -webkit-text-fill-color: var(--ink);
+            -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+            box-shadow: 0 0 0 1000px #fff inset !important;
+            caret-color: var(--ink);
+            transition: background-color 9999s ease-in-out 0s;
+        }
+        .forgot-link {
+            font-size: 11px;
+            color: var(--ink-muted);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .forgot-link:hover { color: var(--ink); }
+
+        /* CTA */
+        .cta {
+            margin-top: 14px;
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 999px;
+            background: var(--dhl-red);
+            color: var(--dhl-yellow);
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.02em;
+            box-shadow: 0 10px 24px rgba(212, 5, 17, 0.33);
+            cursor: pointer;
+            transition: all 0.18s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .cta:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(212, 5, 17, 0.4); }
+        .cta:not(:disabled):active { transform: translateY(0); }
+        .cta:disabled { cursor: wait; opacity: .92; }
+        .arrow-chip {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: var(--dhl-yellow);
+            color: var(--ink);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+        }
+        .cta-spinner {
+            width: 16px; height: 16px;
+            animation: spinslow 1s linear infinite;
+        }
+        @keyframes spinslow {
+            to { transform: rotate(360deg); }
+        }
+
+        .signup-line {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 13px;
+            color: rgba(10, 10, 10, 0.5);
+            font-family: 'Space Grotesk', 'IBM Plex Sans Thai', system-ui, sans-serif;
+        }
+        .signup-line a {
+            color: var(--ink);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 2px solid var(--dhl-yellow);
+        }
+
+        /* Alert override — match the rounded pill aesthetic */
+        .alert {
+            border-radius: 14px;
+            border-left-width: 4px;
+            font-size: 13px;
+            padding: .6rem .9rem;
+        }
+
+        /* ── Driving state (panda leans, speed lines visible) ── */
+        .panda-frame.is-driving {
+            transform: translate3d(-8px, -10px, 0) rotate(var(--tilt, 0deg));
+        }
+        .speed-lines { opacity: 0; transition: opacity .25s; }
+        .panda-frame.is-driving .speed-lines { opacity: .85; }
+        .tongue { opacity: 0; }
+        .panda-frame.is-driving .tongue { opacity: 1; }
+
+        /* ── Responsive ─────────────────────────────────────── */
         @media (max-width: 480px) {
-            .login-card {
-                width: calc(100vw - 40px);
-                max-width: 350px;
-                padding-top: 86px;
-            }
-            .login-card .card { padding: 68px 22px 28px; }
-            .panda-lounge {
-                width: 190px;
-                height: 118px;
-                transform: translateX(-50%) scale(.9);
-                transform-origin: top center;
-            }
+            .topbar-mini { top: 20px; left: 20px; right: 20px; }
+            .stack { gap: 22px; }
+            .greeting h1 { font-size: 22px; }
         }
     </style>
 </head>
 <body>
-    <div class="center-screen">
-        <div class="login-card">
-            <div class="panda-lounge" aria-hidden="true">
-                <div class="panda-ear left"></div>
-                <div class="panda-ear right"></div>
-                <div class="panda-head">
-                    <div class="panda-eye-patch left"><span class="panda-eye"></span></div>
-                    <div class="panda-eye-patch right"><span class="panda-eye"></span></div>
-                    <div class="panda-nose"></div>
-                    <div class="panda-mouth"></div>
+    <div class="stage" id="stage">
+        <!-- Decorative diagonal stripes -->
+        <div class="stripe stripe-top" aria-hidden="true"></div>
+        <div class="stripe stripe-bottom" aria-hidden="true"></div>
+
+        <!-- Top bar -->
+        <div class="topbar-mini">
+            <div class="brand-mark">
+                <span class="brand-dot"></span>
+                <span class="brand-name">C-Aui</span>
+                <span class="brand-tagline">· Smart Logistics</span>
+            </div>
+            <a href="mailto:pattanachok_msn@hotmail.com" class="help-link">ช่วยเหลือ · Help</a>
+        </div>
+
+        <!-- Center stack -->
+        <div class="stack">
+            <!-- Sticker -->
+            <div class="sticker-wrap" id="sticker-wrap">
+                <div class="sticker" id="sticker">
+                    <div class="panda-frame" id="panda-frame">
+                        <svg viewBox="-120 -120 240 240" width="100%" height="100%" preserveAspectRatio="xMidYMin meet" style="overflow: visible">
+                            <defs>
+                                <radialGradient id="pd-face" cx="38%" cy="32%" r="75%">
+                                    <stop offset="0%" stop-color="#ffffff"/>
+                                    <stop offset="55%" stop-color="#f3eee2"/>
+                                    <stop offset="100%" stop-color="#a39d8c"/>
+                                </radialGradient>
+                                <radialGradient id="pd-ear" cx="35%" cy="30%" r="80%">
+                                    <stop offset="0%" stop-color="#4a4a55"/>
+                                    <stop offset="100%" stop-color="#08080c"/>
+                                </radialGradient>
+                                <radialGradient id="pd-body" cx="50%" cy="20%" r="100%">
+                                    <stop offset="0%" stop-color="#2a2a32"/>
+                                    <stop offset="55%" stop-color="#101016"/>
+                                    <stop offset="100%" stop-color="#000000"/>
+                                </radialGradient>
+                                <radialGradient id="pd-patch" cx="40%" cy="35%" r="80%">
+                                    <stop offset="0%" stop-color="#1c1c22"/>
+                                    <stop offset="100%" stop-color="#020205"/>
+                                </radialGradient>
+                            </defs>
+
+                            <!-- Ground shadow -->
+                            <ellipse id="pd-shadow" cx="0" cy="108" rx="78" ry="7" fill="#000" opacity="0.42"/>
+
+                            <!-- Body / paws -->
+                            <g id="pd-body-group">
+                                <path d="M -95 110 Q -100 50 -55 38 Q -25 30 0 30 Q 25 30 55 38 Q 100 50 95 110 Z" fill="url(#pd-body)"/>
+                                <ellipse id="pd-paw-l" cx="-72" cy="78" rx="22" ry="14" fill="#08080c" transform="rotate(-8 -72 78)"/>
+                                <ellipse id="pd-paw-r" cx="72" cy="78" rx="22" ry="14" fill="#08080c" transform="rotate(8 72 78)"/>
+                                <circle id="pd-pad-l" cx="-80" cy="76" r="2.5" fill="#D40511" opacity="0.55"/>
+                                <circle id="pd-pad-r" cx="80" cy="76" r="2.5" fill="#D40511" opacity="0.55"/>
+                            </g>
+
+                            <!-- Ears -->
+                            <g>
+                                <circle cx="-58" cy="-58" r="26" fill="url(#pd-ear)"/>
+                                <circle cx="58" cy="-58" r="26" fill="url(#pd-ear)"/>
+                                <circle cx="-58" cy="-58" r="14" fill="#161620"/>
+                                <circle cx="58" cy="-58" r="14" fill="#161620"/>
+                            </g>
+
+                            <!-- Face -->
+                            <ellipse cx="0" cy="-2" rx="74" ry="66" fill="url(#pd-face)"/>
+                            <ellipse cx="0" cy="6" rx="62" ry="44" fill="#fff" opacity="0.35"/>
+
+                            <!-- Eye patches (move slightly with cursor) -->
+                            <g id="pd-patches">
+                                <ellipse cx="-26" cy="-10" rx="16" ry="22" fill="url(#pd-patch)" transform="rotate(-14 -26 -10)"/>
+                                <ellipse cx="26" cy="-10" rx="16" ry="22" fill="url(#pd-patch)" transform="rotate(14 26 -10)"/>
+                            </g>
+
+                            <!-- Eye whites -->
+                            <circle id="pd-eye-wl" cx="-24" cy="-10" r="8" fill="#fff"/>
+                            <circle id="pd-eye-wr" cx="24"  cy="-10" r="8" fill="#fff"/>
+
+                            <!-- Pupils -->
+                            <circle id="pd-pup-l" cx="-24" cy="-10" r="4.5" fill="#0a0a0e"/>
+                            <circle id="pd-pup-r" cx="24"  cy="-10" r="4.5" fill="#0a0a0e"/>
+
+                            <!-- Catchlights -->
+                            <circle id="pd-cat-l" cx="-22" cy="-12" r="1.7" fill="#D40511"/>
+                            <circle id="pd-cat-r" cx="26"  cy="-12" r="1.7" fill="#D40511"/>
+                            <circle id="pd-cat-l2" cx="-23" cy="-11" r="0.8" fill="#fff"/>
+                            <circle id="pd-cat-r2" cx="25"  cy="-11" r="0.8" fill="#fff"/>
+
+                            <!-- Nose -->
+                            <ellipse cx="0" cy="18" rx="6" ry="4.5" fill="#0a0a0e"/>
+                            <ellipse cx="-1.5" cy="16.5" rx="2" ry="1.4" fill="#fff" opacity="0.4"/>
+
+                            <!-- Mouth (cute) -->
+                            <path d="M -8 28 Q 0 36 8 28" stroke="#0a0a0e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                            <ellipse class="tongue" cx="0" cy="32" rx="3" ry="2" fill="#ff5a8a"/>
+
+                            <!-- Blush + forehead dot -->
+                            <ellipse cx="-46" cy="22" rx="9" ry="5" fill="#ffb3a5" opacity="0.7"/>
+                            <ellipse cx="46" cy="22" rx="9" ry="5" fill="#ffb3a5" opacity="0.7"/>
+                            <circle cx="0" cy="-46" r="3" fill="#D40511" opacity="0.4"/>
+
+                            <!-- Tiny driver cap (red dome on top of head) -->
+                            <ellipse cx="0" cy="-78" rx="42" ry="10" fill="#D40511" opacity="0.95"/>
+                            <path d="M -38 -78 Q 0 -106 38 -78 Z" fill="#D40511"/>
+                            <ellipse cx="0" cy="-78" rx="42" ry="3" fill="#000" opacity="0.15"/>
+                            <circle cx="0" cy="-92" r="3" fill="#fff" opacity="0.85"/>
+                            <!-- Extra cheek blush (lower pink, per cute variant) -->
+                            <ellipse cx="-44" cy="14" rx="9" ry="5" fill="#ffb3c1" opacity="0.55"/>
+                            <ellipse cx="44" cy="14" rx="9" ry="5" fill="#ffb3c1" opacity="0.55"/>
+
+                            <!-- Speed lines (only visible while driving) -->
+                            <g class="speed-lines">
+                                <line x1="-118" y1="-30" x2="-90" y2="-30" stroke="#D40511" stroke-width="2" stroke-linecap="round"/>
+                                <line x1="-120" y1="0"   x2="-85" y2="0"   stroke="#D40511" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+                                <line x1="-115" y1="30"  x2="-92" y2="30"  stroke="#D40511" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+                                <line x1="-118" y1="60"  x2="-95" y2="60"  stroke="#fff"    stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+                            </g>
+                        </svg>
+                    </div>
                 </div>
-                <div class="panda-arm left"></div>
-                <div class="panda-arm right"></div>
+                <div class="tag" id="tag">hi</div>
             </div>
 
-            <div class="card">
-                <div id="alert-box"></div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="email" placeholder="you@example.com" autofocus autocomplete="username">
-                </div>
-                <div class="form-group" style="margin-bottom:.75rem">
-                    <label>Password</label>
-                    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
-                </div>
-                <div style="text-align:right;margin-bottom:1.25rem">
-                    <a href="/forgot-password.html" style="font-size:.8rem;color:var(--gray-500);text-decoration:none">ลืม password?</a>
-                </div>
-                <button class="btn btn-primary btn-block" id="btn-login">เข้าสู่ระบบ</button>
+            <!-- Greeting -->
+            <div class="greeting">
+                <h1>ขับเคลื่อนวันนี้ให้ดีกว่าเดิม</h1>
+                <p>Move smarter today than you did yesterday.</p>
+            </div>
 
-                <div class="signup-link">
+            <!-- Form -->
+            <form class="form" id="login-form" autocomplete="on" novalidate>
+                <div id="alert-box" class="alert-slot"></div>
+
+                <div class="pill" id="pill-email">
+                    <input type="email" id="email" name="email" placeholder="อีเมล · email" autocomplete="username" autofocus>
+                </div>
+
+                <div class="pill" id="pill-password">
+                    <input type="password" id="password" name="password" placeholder="รหัสผ่าน · password" autocomplete="current-password">
+                    <a href="/forgot-password.html" class="forgot-link">ลืม?</a>
+                </div>
+
+                <button type="submit" class="cta" id="btn-login">
+                    <span id="cta-content">
+                        เริ่มเลย
+                        <span class="arrow-chip">→</span>
+                    </span>
+                </button>
+
+                <div class="signup-line">
                     ยังไม่มีบัญชี? <a href="/signup.html">สมัครที่นี่</a>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -199,40 +454,151 @@
     <script src="/js/auth.js"></script>
     <script src="/js/utils.js"></script>
     <script>
-        // If already logged in, bounce to portal.
+        // ── If already logged in, bounce to portal ──────────────────
         (async () => {
             if (await getCurrentSession()) {
                 window.location.href = '/';
             }
         })();
 
-        const btn = document.getElementById('btn-login');
-        const emailEl = document.getElementById('email');
-        const passwordEl = document.getElementById('password');
+        // ── Element refs ────────────────────────────────────────────
+        const stage       = document.getElementById('stage');
+        const stickerWrap = document.getElementById('sticker-wrap');
+        const sticker     = document.getElementById('sticker');
+        const pandaFrame  = document.getElementById('panda-frame');
+        const tag         = document.getElementById('tag');
+        const pillEmail   = document.getElementById('pill-email');
+        const pillPwd     = document.getElementById('pill-password');
+        const emailEl     = document.getElementById('email');
+        const passwordEl  = document.getElementById('password');
+        const form        = document.getElementById('login-form');
+        const btn         = document.getElementById('btn-login');
+        const ctaContent  = document.getElementById('cta-content');
 
-        async function doLogin() {
+        const patchesG  = document.getElementById('pd-patches');
+        const eyeWL     = document.getElementById('pd-eye-wl');
+        const eyeWR     = document.getElementById('pd-eye-wr');
+        const pupL      = document.getElementById('pd-pup-l');
+        const pupR      = document.getElementById('pd-pup-r');
+        const catL      = document.getElementById('pd-cat-l');
+        const catR      = document.getElementById('pd-cat-r');
+        const catL2     = document.getElementById('pd-cat-l2');
+        const catR2     = document.getElementById('pd-cat-r2');
+        const shadowEl  = document.getElementById('pd-shadow');
+
+        // Eye base positions (must match SVG markup above)
+        const EYE = { lx: -24, rx: 24, y: -10 };
+        const CAT = { lx: -22, rx: 26, y: -12, lx2: -23, rx2: 25, y2: -11 };
+
+        // ── Mouse tracking ──────────────────────────────────────────
+        let mouseX = 0, mouseY = 0;     // normalized -1..1 to stage center
+        function applyTracking() {
+            // Pupil drift, clamped so eyes never leave patches
+            const px = Math.max(-4,   Math.min(4,   mouseX * 5));
+            const py = Math.max(-2.5, Math.min(2.5, mouseY * 3.5));
+
+            // Sticker tilt + parallax
+            sticker.style.transform     = `rotate(${mouseX * 1.5}deg)`;
+            stickerWrap.style.transform = `translate3d(${mouseX * -3}px, ${mouseY * -1.2}px, 0)`;
+
+            // Head tilt — combined with driving translate via CSS var
+            const tilt = mouseX * 0.6 * 4;
+            pandaFrame.style.setProperty('--tilt', `${tilt}deg`);
+            if (!pandaFrame.classList.contains('is-driving')) {
+                pandaFrame.style.transform = `rotate(${tilt}deg)`;
+            } else {
+                // is-driving class already applies translate + tilt via CSS
+                pandaFrame.style.transform = `translate3d(-8px, -10px, 0) rotate(${tilt}deg)`;
+            }
+
+            // Eye patches drift very slightly
+            patchesG.setAttribute('transform', `translate(${px * 0.15} ${py * 0.15})`);
+
+            // Eye whites drift a touch
+            eyeWL.setAttribute('cx', EYE.lx + px * 0.4);
+            eyeWL.setAttribute('cy', EYE.y  + py * 0.4);
+            eyeWR.setAttribute('cx', EYE.rx + px * 0.4);
+            eyeWR.setAttribute('cy', EYE.y  + py * 0.4);
+
+            // Pupils
+            pupL.setAttribute('cx', EYE.lx + px);
+            pupL.setAttribute('cy', EYE.y  + py);
+            pupR.setAttribute('cx', EYE.rx + px);
+            pupR.setAttribute('cy', EYE.y  + py);
+
+            // Catchlights
+            catL.setAttribute('cx',  CAT.lx  + px); catL.setAttribute('cy',  CAT.y  + py);
+            catR.setAttribute('cx',  CAT.rx  + px); catR.setAttribute('cy',  CAT.y  + py);
+            catL2.setAttribute('cx', CAT.lx2 + px); catL2.setAttribute('cy', CAT.y2 + py);
+            catR2.setAttribute('cx', CAT.rx2 + px); catR2.setAttribute('cy', CAT.y2 + py);
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            const r = stage.getBoundingClientRect();
+            const cx = r.left + r.width / 2;
+            const cy = r.top + r.height / 2;
+            mouseX = Math.max(-1, Math.min(1, (e.clientX - cx) / (r.width / 2)));
+            mouseY = Math.max(-1, Math.min(1, (e.clientY - cy) / (r.height / 2)));
+            applyTracking();
+        }, { passive: true });
+
+        // ── Pill focus ring ─────────────────────────────────────────
+        emailEl.addEventListener('focus',   () => pillEmail.classList.add('is-focused'));
+        emailEl.addEventListener('blur',    () => pillEmail.classList.remove('is-focused'));
+        passwordEl.addEventListener('focus', () => pillPwd.classList.add('is-focused'));
+        passwordEl.addEventListener('blur',  () => pillPwd.classList.remove('is-focused'));
+
+        // ── Driving state helpers ───────────────────────────────────
+        function setDriving(on) {
+            pandaFrame.classList.toggle('is-driving', on);
+            shadowEl.setAttribute('opacity', on ? '0.18' : '0.42');
+            tag.textContent = on ? 'going!' : 'hi';
+            // re-apply tracking so transform respects driving translate
+            applyTracking();
+        }
+
+        // ── Submit ─────────────────────────────────────────────────
+        async function doLogin(e) {
+            if (e) e.preventDefault();
             clearAlert('alert-box');
             const email = emailEl.value.trim();
             const password = passwordEl.value;
+
             if (!email || !password) {
-                showAlert('alert-box', 'กรุณากรอก email และ password');
+                showAlert('alert-box', 'กรุณากรอกอีเมลและรหัสผ่าน');
                 return;
             }
+            if (!isValidPortalEmail(email)) {
+                showAlert('alert-box', 'รูปแบบอีเมลไม่ถูกต้อง');
+                return;
+            }
+
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> กำลังเข้าสู่ระบบ...';
+            ctaContent.innerHTML = `
+                <svg class="cta-spinner" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                    <circle cx="8" cy="8" r="5.5" stroke="#FFCC00" stroke-opacity="0.35" stroke-width="2" fill="none"/>
+                    <path d="M 8 2.5 A 5.5 5.5 0 0 1 13.5 8" stroke="#FFCC00" stroke-width="2" fill="none" stroke-linecap="round"/>
+                </svg>
+                กำลังเริ่มต้นวันที่ดีกว่า...
+            `;
+            setDriving(true);
+
             try {
                 await login(email, password);
+                // keep "going!" state during redirect — feels continuous
                 window.location.href = '/';
-            } catch (e) {
-                showAlert('alert-box', e.message || 'เข้าสู่ระบบไม่สำเร็จ');
+            } catch (err) {
+                showAlert('alert-box', err.message || 'เข้าสู่ระบบไม่สำเร็จ');
                 btn.disabled = false;
-                btn.textContent = 'เข้าสู่ระบบ';
+                ctaContent.innerHTML = `เริ่มเลย <span class="arrow-chip">→</span>`;
+                setDriving(false);
             }
         }
 
-        btn.addEventListener('click', doLogin);
-        passwordEl.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-        emailEl.addEventListener('keydown', e => { if (e.key === 'Enter') passwordEl.focus(); });
+        form.addEventListener('submit', doLogin);
+        emailEl.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); passwordEl.focus(); }
+        });
     </script>
 </body>
 </html>
