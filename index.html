@@ -382,17 +382,29 @@
       });
       const warehouseCard = cardsEl.querySelector('.card[data-app="warehouse"]');
       if (warehouseCard?.classList.contains('show')) {
-        warehouseCard.addEventListener('click', relayToWarehouse);
+        warehouseCard.addEventListener('click', event => relayToApp(
+          event,
+          'https://warehouse.c-aui.com/login.html',
+          '/dashboard.html'
+        ));
+      }
+      const transportCard = cardsEl.querySelector('.card[data-app="transport"]');
+      if (transportCard?.classList.contains('show')) {
+        transportCard.addEventListener('click', event => relayToApp(
+          event,
+          'https://transport.c-aui.com/',
+          '/'
+        ));
       }
       stateEl.style.display = 'none';
       cardsEl.style.display = '';
     })();
 
-    async function relayToWarehouse(event) {
+    async function relayToApp(event, targetUrl, nextPath) {
       event.preventDefault();
       const session = await getCurrentSession();
       if (!session) { window.location.href = '/login.html'; return; }
-      window.location.href = buildSessionRelayUrl('https://warehouse.c-aui.com/login.html', session, '/dashboard.html');
+      window.location.href = buildSessionRelayUrl(targetUrl, session, nextPath);
     }
 
     function buildSessionRelayUrl(targetUrl, session, nextPath) {
