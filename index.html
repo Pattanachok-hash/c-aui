@@ -378,11 +378,28 @@
       // Show only granted cards
       const granted = new Set(info.apps.map(a => a.app));
       cardsEl.querySelectorAll('.card[data-app]').forEach(card => {
+        if (card.dataset.app === 'warehouse') {
+          card.href = buildSessionRelayUrl('https://warehouse.c-aui.com/login.html', session, '/dashboard.html');
+        }
         if (granted.has(card.dataset.app)) card.classList.add('show');
       });
       stateEl.style.display = 'none';
       cardsEl.style.display = '';
     })();
+
+    function buildSessionRelayUrl(targetUrl, session, nextPath) {
+      const url = new URL(targetUrl);
+      const hash = new URLSearchParams();
+      hash.set('type', 'portal_sso');
+      hash.set('access_token', session.access_token);
+      hash.set('refresh_token', session.refresh_token);
+      hash.set('token_type', session.token_type || 'bearer');
+      if (session.expires_at) hash.set('expires_at', String(session.expires_at));
+      if (session.expires_in) hash.set('expires_in', String(session.expires_in));
+      if (nextPath) hash.set('next', nextPath);
+      url.hash = hash.toString();
+      return url.toString();
+    }
   </script>
 
 </body>
