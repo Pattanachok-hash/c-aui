@@ -553,7 +553,10 @@
         async function doLogin(e) {
             if (e) e.preventDefault();
             clearAlert('alert-box');
-            const email = emailEl.value.trim();
+            const raw = emailEl.value.trim();
+            // Warehouse-scanner users are used to typing just their username (e.g. "firstname.lastname")
+            // and the warehouse login auto-appends @wh.local. Mirror that here for parity.
+            const email = raw.includes('@') ? raw : `${raw}@wh.local`;
             const password = passwordEl.value;
 
             if (!email || !password) {
