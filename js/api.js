@@ -23,16 +23,34 @@ async function apiFetch(path, options = {}) {
         ...(options.headers || {}),
     };
 
-    let res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    console.log('[PORTAL] apiFetch →', {
+        url: `${API_BASE}${path}`,
+        method: options.method || 'GET',
+        has_token: !!token,
+        token_prefix: token ? token.slice(0, 16) + '...' : null,
+    });
+
+    let res;
+    try {
+        res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    } catch (netErr) {
+        console.error('[PORTAL] apiFetch network FAIL', { url: `${API_BASE}${path}`, err: netErr?.message || netErr });
+        throw netErr;
+    }
+    console.log('[PORTAL] apiFetch ←', { url: `${API_BASE}${path}`, status: res.status });
 
     // Refresh + retry once on 401
     if (res.status === 401) {
+        console.warn('[PORTAL] apiFetch 401 → attempting refresh');
         const { data, error } = await sb.auth.refreshSession();
+        console.log('[PORTAL] refreshSession', { ok: !error && !!data?.session, error: error?.message });
         if (!error && data.session) {
             const headers2 = { ...headers, Authorization: `Bearer ${data.session.access_token}` };
             res = await fetch(`${API_BASE}${path}`, { ...options, headers: headers2 });
+            console.log('[PORTAL] apiFetch retry ←', { status: res.status });
         }
         if (res.status === 401) {
+            console.error('[PORTAL] apiFetch retry still 401 → signOut + redirect');
             await sb.auth.signOut();
             window.location.href = '/login.html';
             throw new Error('Session expired');

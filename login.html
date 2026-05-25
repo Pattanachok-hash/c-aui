@@ -559,11 +559,14 @@
             const email = raw.includes('@') ? raw : `${raw}@wh.local`;
             const password = passwordEl.value;
 
+            console.log('[PORTAL] login click', { raw, finalEmail: email, ua: navigator.userAgent, now: new Date().toISOString() });
+
             if (!email || !password) {
                 showAlert('alert-box', 'กรุณากรอกอีเมลและรหัสผ่าน');
                 return;
             }
             if (!isValidPortalEmail(email)) {
+                console.warn('[PORTAL] email failed isValidPortalEmail', email);
                 showAlert('alert-box', 'รูปแบบอีเมลไม่ถูกต้อง');
                 return;
             }
@@ -579,10 +582,17 @@
             setDriving(true);
 
             try {
-                await login(email, password);
+                const result = await login(email, password);
+                console.log('[PORTAL] login OK', {
+                    user_email: result?.user?.email,
+                    user_id: result?.user?.id,
+                    has_access_token: !!result?.session?.access_token,
+                    expires_at: result?.session?.expires_at,
+                });
                 // keep "going!" state during redirect — feels continuous
                 window.location.href = '/';
             } catch (err) {
+                console.error('[PORTAL] login FAILED', err);
                 showAlert('alert-box', err.message || 'เข้าสู่ระบบไม่สำเร็จ');
                 btn.disabled = false;
                 ctaContent.innerHTML = `เริ่มเลย <span class="arrow-chip">→</span>`;

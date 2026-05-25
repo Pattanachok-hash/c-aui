@@ -340,16 +340,29 @@
   <script src="/js/api.js"></script>
   <script>
     (async () => {
+      console.log('[PORTAL] index loaded', { href: location.href, now: new Date().toISOString() });
       // Require login
       const session = await getCurrentSession();
-      if (!session) { window.location.href = '/login.html'; return; }
+      console.log('[PORTAL] index getCurrentSession', {
+        has_session: !!session,
+        user_email: session?.user?.email,
+        expires_at: session?.expires_at,
+        api_base: typeof API_BASE !== 'undefined' ? API_BASE : '(undefined)',
+      });
+      if (!session) {
+        console.warn('[PORTAL] index: no session → redirect to login');
+        window.location.href = '/login.html';
+        return;
+      }
 
       // Fetch user info + apps from portal backend
       let info;
       try {
         info = await api.get('/api/auth/me');
+        console.log('[PORTAL] /api/auth/me OK', info);
       } catch (e) {
         // If backend is down or returns 401 → bounce to login
+        console.error('[PORTAL] /api/auth/me FAILED', { status: e?.status, message: e?.message, name: e?.name });
         await sb.auth.signOut();
         window.location.href = '/login.html';
         return;
