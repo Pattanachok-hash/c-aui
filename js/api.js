@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════
-   DSC Portal — Backend API wrapper
+   C-Aui Portal — Backend API wrapper
    ──────────────────────────────────────────────────────────────── */
 
 // Backend URL: api.c-aui.com in production, override with ?api=... query for local dev.

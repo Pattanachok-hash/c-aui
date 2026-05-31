@@ -1,4 +1,4 @@
-"""DSC Portal — auth + permissions backend.
+"""C-Aui Portal — auth + permissions backend.
 
 Hosts:
   /api/auth/*    — signup, /me, change-password
@@ -15,7 +15,7 @@ from routers import auth, admin
 
 logging.basicConfig(level=logging.INFO)
 
-app = FastAPI(title="DSC Portal API", version="1.0.0")
+app = FastAPI(title="C-Aui Portal API", version="1.0.0")
 
 _SAFE_CORS_ORIGIN_RE = re.compile(
     r"^(http://localhost:\d+|http://127\.0\.0\.1:\d+|https://([a-z0-9-]+\.)?c-aui\.com)$",
@@ -69,7 +69,7 @@ app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 @app.get("/")
 def root():
-    return {"service": "DSC Portal API", "status": "ok"}
+    return {"service": "C-Aui Portal API", "status": "ok"}
 
 
 @app.get("/healthz")

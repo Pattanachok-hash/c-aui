@@ -40,7 +40,7 @@ def send_signup_notification(user_email: str) -> dict:
           <h2 style="margin-top:16px;color:#1a1a1a">มีผู้สมัครใหม่</h2>
         </div>
         <p style="font-size:15px;color:#444;line-height:1.6">
-          มีผู้ใช้สมัครเข้าสู่ระบบ DSC Portal:
+          มีผู้ใช้สมัครเข้าสู่ระบบ C-Aui Portal:
         </p>
         <div style="background:#fef3c7;border-left:4px solid #FFCC00;padding:12px 16px;
                     border-radius:6px;margin:16px 0">
@@ -58,12 +58,12 @@ def send_signup_notification(user_email: str) -> dict:
           </a>
         </div>
         <p style="color:#999;font-size:12px;text-align:center;margin-top:32px">
-          DSC · CTC FG Export Portal
+          C-Aui · CTC FG Export Portal
         </p>
       </div>
     </body></html>
     """
-    return _send(_DEVELOPER, f"DSC Portal: ผู้สมัครใหม่ — {user_email}", html)
+    return _send(_DEVELOPER, f"C-Aui Portal: ผู้สมัครใหม่ — {user_email}", html)
 
 
 def send_approval_notification(user_email: str, apps: list[dict]) -> dict:
@@ -98,12 +98,12 @@ def send_approval_notification(user_email: str, apps: list[dict]) -> dict:
           </a>
         </div>
         <p style="color:#999;font-size:12px;text-align:center;margin-top:32px">
-          DSC · CTC FG Export Portal
+          C-Aui · CTC FG Export Portal
         </p>
       </div>
     </body></html>
     """
-    return _send(user_email, "DSC Portal: บัญชีของคุณได้รับการอนุมัติ", html)
+    return _send(user_email, "C-Aui Portal: บัญชีของคุณได้รับการอนุมัติ", html)
 
 
 def send_password_reset(user_email: str, reset_token: str) -> dict:
@@ -141,13 +141,13 @@ def send_password_reset(user_email: str, reset_token: str) -> dict:
         <div style="border-top:1px solid #eee;margin-top:24px;padding-top:16px">
           <p style="color:#999;font-size:12px;text-align:center;line-height:1.5">
             หากคุณไม่ได้ขอรีเซ็ต password — ไม่ต้องทำอะไร ลิงก์นี้จะหมดอายุไปเอง<br>
-            DSC · CTC FG Export Portal
+            C-Aui · CTC FG Export Portal
           </p>
         </div>
       </div>
     </body></html>
     """
-    return _send(user_email, "DSC Portal: ลิงก์รีเซ็ต Password", html)
+    return _send(user_email, "C-Aui Portal: ลิงก์รีเซ็ต Password", html)
 
 
 def send_rejection_notification(user_email: str, note: str | None = None) -> dict:
@@ -172,9 +172,9 @@ def send_rejection_notification(user_email: str, note: str | None = None) -> dic
           กรุณาติดต่อผู้ดูแลระบบหากมีคำถามเพิ่มเติม
         </p>
         <p style="color:#999;font-size:12px;text-align:center;margin-top:32px">
-          DSC · CTC FG Export Portal
+          C-Aui · CTC FG Export Portal
         </p>
       </div>
     </body></html>
     """
-    return _send(user_email, "DSC Portal: คำขอสมัครไม่ได้รับการอนุมัติ", html)
+    return _send(user_email, "C-Aui Portal: คำขอสมัครไม่ได้รับการอนุมัติ", html)

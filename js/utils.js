@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════
-   DSC Portal — Misc utilities (toast, alert, formatters)
+   C-Aui Portal — Misc utilities (toast, alert, formatters)
    ──────────────────────────────────────────────────────────────── */
 
 function showAlert(containerId, message, type = 'error') {
@@ -125,7 +125,7 @@ function renderTopbar() {
     const email = getUserEmail();
     return `
     <div class="topbar">
-        <a href="/" class="brand">DSC PORTAL</a>
+        <a href="/" class="brand">C-AUI PORTAL</a>
         <div class="topbar-right">
             <span class="user-email">${escapeHtml(email)}</span>
             <a href="/change-password.html" class="btn btn-secondary btn-sm">

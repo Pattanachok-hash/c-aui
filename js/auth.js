@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════
-   DSC Portal — Auth helpers (Supabase SDK wrapper)
+   C-Aui Portal — Auth helpers (Supabase SDK wrapper)
    ──────────────────────────────────────────────────────────────── */
 
 // NOTE: SUPABASE_URL / SUPABASE_ANON_KEY are the SAME as the warehouse project
