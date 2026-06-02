@@ -321,6 +321,14 @@
                     <option value="admin">Admin</option>
                 </select>
             </div>
+            <div class="app-grant" data-app="shipco-import">
+                <input type="checkbox" id="grant-shipco-import">
+                <label for="grant-shipco-import">ShipCo Import</label>
+                <select id="role-shipco-import" disabled>
+                    <option value="operator">Operator</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
             <div style="display:flex;gap:.5rem;margin-top:1.25rem">
                 <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-approve')">Cancel</button>
                 <button class="btn btn-success" style="flex:1" id="btn-confirm-approve">Approve</button>
@@ -374,6 +382,14 @@
                     <option value="admin">Admin</option>
                 </select>
             </div>
+            <div class="app-grant" data-edit-app="shipco-import">
+                <input type="checkbox" id="edit-grant-shipco-import">
+                <label for="edit-grant-shipco-import">ShipCo Import</label>
+                <select id="edit-role-shipco-import" disabled>
+                    <option value="operator">Operator</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
             <div style="display:flex;gap:.5rem;margin-top:1.25rem">
                 <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-edit-access')">Cancel</button>
                 <button class="btn btn-primary" style="flex:1" id="btn-save-access">Save access</button>
@@ -389,8 +405,8 @@
         requireAuth();
         document.getElementById('topbar').innerHTML = renderTopbar();
 
-        const APPS = ['warehouse', 'transport', 'shipco'];
-        const APP_LABELS = { warehouse: 'Warehouse', transport: 'Transport', shipco: 'Shipping Co.' };
+        const APPS = ['warehouse', 'transport', 'shipco', 'shipco-import'];
+        const APP_LABELS = { warehouse: 'Warehouse', transport: 'Transport', shipco: 'Shipping Co.', 'shipco-import': 'ShipCo Import' };
 
         let pendingList = [];
         let usersList = [];
