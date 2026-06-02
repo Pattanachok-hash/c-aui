@@ -120,6 +120,17 @@
     .card-transport .btn     { background: linear-gradient(135deg, #b30000, #D40511); box-shadow: 0 4px 16px rgba(212,5,17,0.35); }
     .card-transport .tag     { background: rgba(212,5,17,0.10); color: #b30000; border: 1px solid rgba(212,5,17,0.2); }
 
+    .card-shipco-import {
+      background: linear-gradient(145deg, #e0f2f1, #b2dfdb);
+      box-shadow: 0 8px 32px rgba(0,137,123,0.2);
+      border: 1.5px solid rgba(0,137,123,0.15);
+    }
+    .card-shipco-import:hover { box-shadow: 0 20px 48px rgba(0,137,123,0.3); }
+    .card-shipco-import .accent  { color: #00695c; }
+    .card-shipco-import .divider { background: linear-gradient(90deg, #00897b, #4db6ac); }
+    .card-shipco-import .btn     { background: linear-gradient(135deg, #00695c, #00897b); box-shadow: 0 4px 16px rgba(0,137,123,0.35); }
+    .card-shipco-import .tag     { background: rgba(0,137,123,0.12); color: #00695c; border: 1px solid rgba(0,137,123,0.2); }
+
     .card .icon {
       font-size: 54px;
       margin-bottom: 16px;
@@ -327,6 +338,19 @@
         <div>
           <span class="tag">Tracking</span>
           <span class="tag">FCL Export</span>
+        </div>
+        <span class="btn">เข้าสู่ระบบ →</span>
+      </a>
+
+      <a class="card card-shipco-import" data-app="shipco-import" href="https://shipco-import.c-aui.com">
+        <span class="icon">🏭</span>
+        <span class="accent">Import System</span>
+        <h2>ShipCo Import</h2>
+        <div class="divider"></div>
+        <p>จัดการ RM Import<br>BL · Invoice · Clearance · Pickup</p>
+        <div>
+          <span class="tag">RM Import</span>
+          <span class="tag">Clearance</span>
         </div>
         <span class="btn">เข้าสู่ระบบ →</span>
       </a>

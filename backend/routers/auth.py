@@ -133,9 +133,10 @@ async def signup(body: SignupRequest):
             db_execute(
                 supabase.table("user_app_access").upsert(
                     [
-                        {"user_id": user_id, "app": "warehouse", "role": "admin"},
-                        {"user_id": user_id, "app": "transport", "role": "admin"},
-                        {"user_id": user_id, "app": "shipco",    "role": "admin"},
+                        {"user_id": user_id, "app": "warehouse",     "role": "admin"},
+                        {"user_id": user_id, "app": "transport",     "role": "admin"},
+                        {"user_id": user_id, "app": "shipco",        "role": "admin"},
+                        {"user_id": user_id, "app": "shipco-import", "role": "admin"},
                     ],
                     on_conflict="user_id,app",
                 ),

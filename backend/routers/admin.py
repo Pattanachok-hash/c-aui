@@ -18,7 +18,7 @@ router = APIRouter()
 
 # ── Schemas ──────────────────────────────────────────────────────────────────
 
-AppName = Literal["warehouse", "transport", "shipco"]
+AppName = Literal["warehouse", "transport", "shipco", "shipco-import"]
 RoleName = Literal["admin", "operator"]
 
 
