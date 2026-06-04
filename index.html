@@ -433,6 +433,14 @@
           '/'
         ));
       }
+      const shipcoImportCard = cardsEl.querySelector('.card[data-app="shipco-import"]');
+      if (shipcoImportCard?.classList.contains('show')) {
+        shipcoImportCard.addEventListener('click', event => relayToApp(
+          event,
+          'https://shipco-import.c-aui.com/',
+          '/'
+        ));
+      }
       stateEl.style.display = 'none';
       cardsEl.style.display = '';
     })();
