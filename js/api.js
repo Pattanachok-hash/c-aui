@@ -2,11 +2,14 @@
    C-Aui Portal — Backend API wrapper
    ──────────────────────────────────────────────────────────────── */
 
-// Backend URL: api.c-aui.com in production, override with ?api=... query for local dev.
+// Backend URL: api.c-aui.com in production; ?api=... is allowed only on local dev.
 const API_BASE = (() => {
+    const isLocal =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname.startsWith('127.');
     const override = new URLSearchParams(window.location.search).get('api');
-    if (override) return override.replace(/\/$/, '');
-    if (window.location.hostname === 'localhost' || window.location.hostname.startsWith('127.')) {
+    if (isLocal && override) return override.replace(/\/$/, '');
+    if (isLocal) {
         return 'http://localhost:8000';
     }
     return 'https://api.c-aui.com';

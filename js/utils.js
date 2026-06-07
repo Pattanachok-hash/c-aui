@@ -5,8 +5,12 @@
 function showAlert(containerId, message, type = 'error') {
     const el = document.getElementById(containerId);
     if (!el) return;
-    el.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
-    if (type !== 'error') setTimeout(() => { el.innerHTML = ''; }, 4000);
+    const safeType = ['error', 'success', 'warning', 'info'].includes(type) ? type : 'error';
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${safeType}`;
+    alert.textContent = String(message ?? '');
+    el.replaceChildren(alert);
+    if (safeType !== 'error') setTimeout(() => { el.innerHTML = ''; }, 4000);
 }
 
 function clearAlert(containerId) {
