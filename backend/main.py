@@ -6,9 +6,10 @@ Hosts:
 """
 import logging
 import re
-from fastapi import FastAPI
+from pathlib import Path
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import Response
+from starlette.responses import FileResponse, Response
 
 from config import settings
 from routers import auth, admin
@@ -16,6 +17,7 @@ from routers import auth, admin
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title="C-Aui Portal API", version="1.0.0")
+FRONTEND_ROOT = Path(__file__).resolve().parent.parent
 
 _SAFE_CORS_ORIGIN_RE = re.compile(
     r"^(http://localhost:\d+|http://127\.0\.0\.1:\d+|https://([a-z0-9-]+\.)?c-aui\.com)$",
@@ -67,11 +69,23 @@ app.include_router(auth.router,  prefix="/api/auth",  tags=["auth"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 
-@app.get("/")
-def root():
-    return {"service": "C-Aui Portal API", "status": "ok"}
-
-
 @app.get("/healthz")
 def healthz():
     return {"status": "ok"}
+
+
+@app.get("/", include_in_schema=False)
+def frontend_root():
+    return FileResponse(FRONTEND_ROOT / "index.html")
+
+
+@app.get("/{asset_path:path}", include_in_schema=False)
+def frontend_asset(asset_path: str):
+    requested = (FRONTEND_ROOT / asset_path).resolve()
+    try:
+        requested.relative_to(FRONTEND_ROOT)
+    except ValueError:
+        raise HTTPException(404, "Not found")
+    if not requested.is_file():
+        raise HTTPException(404, "Not found")
+    return FileResponse(requested)

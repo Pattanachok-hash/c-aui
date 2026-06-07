@@ -1,8 +1,4 @@
-# Frontend stays on GitHub Pages — don't ship it in the Railway image
-*.html
-css/
-js/
-img/
+# Frontend is served by the Railway FastAPI app for same-origin /api calls.
 *.md
 .git
 .claude/

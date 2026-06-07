@@ -2,7 +2,8 @@
    C-Aui Portal — Backend API wrapper
    ──────────────────────────────────────────────────────────────── */
 
-// Backend URL: api.c-aui.com in production; ?api=... is allowed only on local dev.
+// Backend URL: same-origin in production; ?api=... is allowed only on local dev.
+const LEGACY_API_BASE = 'https://api.c-aui.com';
 const API_BASE = (() => {
     const isLocal =
         window.location.hostname === 'localhost' ||
@@ -12,8 +13,12 @@ const API_BASE = (() => {
     if (isLocal) {
         return 'http://localhost:8000';
     }
-    return 'https://api.c-aui.com';
+    return '';
 })();
+
+function apiUrl(base, path) {
+    return `${base}${path}`;
+}
 
 
 async function apiFetch(path, options = {}) {
@@ -26,21 +31,30 @@ async function apiFetch(path, options = {}) {
         ...(options.headers || {}),
     };
 
+    let activeBase = API_BASE;
     console.log('[PORTAL] apiFetch →', {
-        url: `${API_BASE}${path}`,
+        url: apiUrl(activeBase, path),
         method: options.method || 'GET',
         has_token: !!token,
-        token_prefix: token ? token.slice(0, 16) + '...' : null,
     });
 
     let res;
     try {
-        res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+        res = await fetch(apiUrl(activeBase, path), { ...options, headers });
     } catch (netErr) {
-        console.error('[PORTAL] apiFetch network FAIL', { url: `${API_BASE}${path}`, err: netErr?.message || netErr });
+        console.error('[PORTAL] apiFetch network FAIL', { url: apiUrl(activeBase, path), err: netErr?.message || netErr });
         throw netErr;
     }
-    console.log('[PORTAL] apiFetch ←', { url: `${API_BASE}${path}`, status: res.status });
+    console.log('[PORTAL] apiFetch ←', { url: apiUrl(activeBase, path), status: res.status });
+
+    // During DNS cutover, GitHub Pages may still serve the frontend and return
+    // 404/405 for /api/*. Fallback keeps the old split-host deployment working.
+    if (API_BASE === '' && (res.status === 404 || res.status === 405)) {
+        activeBase = LEGACY_API_BASE;
+        console.warn('[PORTAL] same-origin API unavailable → falling back to legacy API host');
+        res = await fetch(apiUrl(activeBase, path), { ...options, headers });
+        console.log('[PORTAL] apiFetch fallback ←', { url: apiUrl(activeBase, path), status: res.status });
+    }
 
     // Refresh + retry once on 401
     if (res.status === 401) {
@@ -49,7 +63,7 @@ async function apiFetch(path, options = {}) {
         console.log('[PORTAL] refreshSession', { ok: !error && !!data?.session, error: error?.message });
         if (!error && data.session) {
             const headers2 = { ...headers, Authorization: `Bearer ${data.session.access_token}` };
-            res = await fetch(`${API_BASE}${path}`, { ...options, headers: headers2 });
+            res = await fetch(apiUrl(activeBase, path), { ...options, headers: headers2 });
             console.log('[PORTAL] apiFetch retry ←', { status: res.status });
         }
         if (res.status === 401) {
