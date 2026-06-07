@@ -315,7 +315,7 @@
             </div>
             <div class="app-grant" data-app="shipco">
                 <input type="checkbox" id="grant-shipco">
-                <label for="grant-shipco">Shipping Co.</label>
+                <label for="grant-shipco">ShipCo Export</label>
                 <select id="role-shipco" disabled>
                     <option value="operator">Operator</option>
                     <option value="admin">Admin</option>
@@ -376,7 +376,7 @@
             </div>
             <div class="app-grant" data-edit-app="shipco">
                 <input type="checkbox" id="edit-grant-shipco">
-                <label for="edit-grant-shipco">Shipping Co.</label>
+                <label for="edit-grant-shipco">ShipCo Export</label>
                 <select id="edit-role-shipco" disabled>
                     <option value="operator">Operator</option>
                     <option value="admin">Admin</option>
@@ -406,7 +406,7 @@
         document.getElementById('topbar').innerHTML = renderTopbar();
 
         const APPS = ['warehouse', 'transport', 'shipco', 'shipco-import'];
-        const APP_LABELS = { warehouse: 'Warehouse', transport: 'Transport', shipco: 'Shipping Co.', 'shipco-import': 'ShipCo Import' };
+        const APP_LABELS = { warehouse: 'Warehouse', transport: 'Transport', shipco: 'ShipCo Export', 'shipco-import': 'ShipCo Import' };
 
         let pendingList = [];
         let usersList = [];
